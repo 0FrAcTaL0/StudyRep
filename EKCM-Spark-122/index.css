@@ -1,0 +1,552 @@
+/* Подключение шрифта для имитации газоразрядных индикаторов */
+@font-face {
+  font-family: 'digital';
+  src: url("fonts/digital.ttf") format('truetype');
+}
+
+@font-face {
+  font-family: 'gost';
+  src: url("fonts/GOSTTypeB.woff2") format('woff2');
+}
+
+@media print {
+  @page {
+    size: landscape;
+  }
+  html {
+    transform: scale(0.84);
+    transform-origin: left;
+    width: calc(100% / 0.84);
+  }
+}
+
+/* Общие стили для всей страницы – делаем её на всю высоту */
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  background-color: #ffffff;
+  background-size: 100% 1.2em;
+}
+
+/* Контейнер калькулятора – центрируем по вертикали и горизонтали */
+.calculator {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Основной блок (рамка калькулятора + тени) */
+.calculator__body {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  left: -85px;
+}
+
+/* Стиль самого калькулятора (основная плата) */
+#myCalc {
+  width: 825px;
+  height: 700px;
+  background-color: #d8dbd3;
+  box-sizing: border-box;
+  border: 20px solid #9aa3a8;
+  position: relative;
+}
+
+.top-svg {
+  position: absolute;
+  top: 32px;
+  height: 200px;
+  width: 792px;
+  transform: scale(1.463, 1.32);
+}
+
+/* Блок экрана – позиционируем поверх тёмного фона */
+.screen-section {
+  z-index: 3;
+  height: 50px;
+  width: 660px;
+  top: 290px;
+  right: 63px;
+  position: absolute;
+  transform: scale(1.15);
+}
+
+/* Сам экран */
+.screen {
+  background-color: #29002c;
+  border-top: solid 8px #0d000f;
+  border-right: solid 4px #0d000f;
+  border-left: solid 4px #0d000f;
+  border-bottom: solid 8px #0d000f;
+  margin: auto;
+  text-align: center;
+}
+
+/* Стиль для каждого символа на экране (цифры и точки) */
+.screen-item {
+  color: #dd600d;
+  font-size: 50px;
+  font-family: digital;
+  display: inline;
+  width: 20px;
+  text-align: right;
+  opacity: 0.15;
+  /* по умолчанию скрыты */
+  text-shadow: 0 0 1px rgba(87, 47, 47, 0.6);
+}
+
+/* Корректировка позиций точек (запятых) между разрядами */
+.dot {
+  margin-left: -5px;
+  margin-right: -10px;
+}
+
+/* Название модели – стилизованная табличка*/
+.calculator-title {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 165px;
+  height: 40px !important;
+  min-width: 0px;
+
+  top: 5px;
+  left: 590px;
+
+  transform: scale(0.85);
+}
+
+.calculator-title::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #b8bdb3;
+  border: 2px solid #0000008a;
+  z-index: 0;
+}
+
+#label {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: #000000;
+  text-transform: uppercase;
+  font-family: 'gost';
+  font-size: 24px;
+  font-weight: bold;
+  border: solid 3px #000000;
+  background-color: #b8bdb3;
+  padding: 0 22px 0 22px;
+}
+
+
+/* Клавиатура – область с кнопками */
+.keyboard {
+  height: 180px;
+  width: 470px;
+  top: 450px;
+  right: 60px;
+  background-color: #d8dbd3;
+  position: absolute;
+  transform: scale(1.1);
+}
+
+.precision {
+  display: flex;
+  position: absolute;
+  transform: translate(-150px, -8px) scale(0.93);
+  border: 0.5px#000 solid !important;
+  box-shadow: 0px 0px 2px 3px #9f9f9e;
+  border-radius: 5%;
+  width: 81px;
+  height: 180px;
+  padding: 5px 5px 5px 10px;
+  /* top, right, bottom , left*/
+}
+
+/* Переключатель точности*/
+.precision-row {
+  display: grid;
+  grid-template-columns: 1;
+  position: static;
+  margin-bottom: 160px;
+  align-items: center;
+  gap: 12px;
+  color: #333;
+  transform: scale(1, 0.6);
+}
+
+/* Кнопки точности*/
+.precision-button {
+  height: 30px !important;
+  width: 35px !important;
+  padding: 0;
+  cursor: pointer;
+  transition: 0.05s linear;
+  text-align: center;
+  background-color: #000 !important;
+}
+
+.precision-button[data-precision="0"] {
+  background-color: #A8392F !important;
+}
+
+.precision-row-labels {
+  transform: translateY(-10.2px);
+  height: auto;
+  width: 40px;
+  display: grid;
+  position: static;
+  font-family: gost;
+  font-weight: bold;
+  text-align: right;
+  font-size: 15px !important;
+  min-height: 0px !important;
+}
+
+.precision-row-labels p {
+  border-bottom: 2px #000000;
+  border-bottom-style: solid;
+}
+
+.precision-row-labels p[value="13"] {
+  margin-top: -9px;
+}
+
+.precision-row-labels p[value="11"] {
+  margin-top: -7.6px;
+}
+
+.precision-row-labels p[value="9"] {
+  margin-top: -8.5px;
+}
+
+.precision-row-labels p[value="7"] {
+  margin-top: -8px;
+}
+
+.precision-row-labels p[value="5"] {
+  margin-top: -8px;
+}
+
+.precision-row-labels p[value="3"] {
+  margin-top: -8px;
+}
+
+.precision-button:active {
+  transform: translateY(2px);
+  box-shadow: 0px 1px 0 0 #514d4d,
+    inset -1px -1px 3px 0px rgba(0, 0, 0, 0.3);
+}
+
+.precision-button.active {
+  background-color: #4a6a8f;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/*Контейнер для всех клавиш*/
+.keys {
+  display: flex;
+  transform: translateX(-20px);
+  gap: 35px;
+}
+
+/*Первая панель, клавиши памяти*/
+.keys-memory {
+  display: grid;
+  gap: 2px 2px;
+  grid-template-columns: 40px 40px;
+  background-color: #000000;
+  border: 1px#000 solid !important;
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  border-radius: 2%;
+  font-size: 22px;
+}
+
+.circle-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border: 3px solid #000000;
+  /* цвет обводки */
+  border-radius: 50%;
+  /* делаем круг */
+  font-size: 20px;
+}
+
+/*Вторая панель, клавиши цифр и точка*/
+.digits {
+  display: grid;
+  /* transform: translateX(30px); */
+  grid-template-columns: 40px 40px 40px;
+  gap: 2px 2px;
+  background-color: #000000;
+  min-width: 0;
+  border: 0.5px#000 solid !important;
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  border-radius: 2%;
+}
+
+.digits button {
+  background-color: #e6e8d7 !important;
+}
+
+.digits button[value="0"] {
+  grid-column: span 2;
+}
+
+/*Третья панель, стандартные операции + обратное деление, смена знака, степень*/
+.operations {
+  display: grid;
+  /* transform: translateX(60px); */
+  grid-template-columns: 40px 40px 40px;
+  grid-auto-rows: 40px;
+  gap: 2px 2px;
+  background-color: #000000;
+  border: 0.5px#000 solid !important;
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  border-radius: 2%;
+}
+
+.operations button[value="-"] {
+  font-weight: bold;
+}
+
+.operations button[value="+"] {
+  grid-row: span 2;
+}
+
+.operations button[value="*"] {
+  grid-row: span 2;
+}
+
+.operations button[value="="] {
+  background-color: rgb(166, 47, 10) !important;
+  grid-column: span 2;
+  font-weight: bold;
+}
+
+.operations button[value="/-/"] {
+  font-size: 17px !important;
+}
+
+.additional {
+  display: grid;
+  /* transform:translateX(90px); */
+  gap: 2px 2px;
+  font-family: gost;
+  background-color: #000000;
+  border: 0.5px#000 solid !important;
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  border-radius: 2%;
+}
+
+/* Общий стиль для всех кнопок */
+#myCalc button {
+  display: inline-block;
+  height: auto;
+  width: auto;
+  font-family: 'gost';
+  font-size: 22px;
+  color: #000000;
+  background-color: #8a8b63;
+  border: none;
+  outline: none;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0px 1px 1px 1px #444141,
+    inset -1px -1px 8px 1px rgba(136, 85, 85, 0.5);
+  transition: 0.05s linear;
+}
+
+/* Эффект нажатия – кнопка чуть утапливается */
+#myCalc button:active {
+  transform: translateY(1px);
+  box-shadow: 0px 1px 0 0 #514d4d,
+    inset -2px -1px 5px 0px rgba(129, 76, 76, 0.5);
+}
+
+/*Переключатель включения*/
+.switch-row {
+  top: 90px;
+  left: -246.8px;
+  transform: rotate(270deg) scale(1.5);
+  display: flex;
+  position: absolute;
+  align-items: center;
+}
+
+/* Стилизация выключателя (on/off switch) */
+.onoffswitch {
+  float: left;
+  box-shadow: 0px 1px 1px 1px #444141,
+    inset -2px -1px 10px 1px rgba(129, 76, 76, 0.5);
+  position: relative;
+  width: 51px;
+}
+
+.onoffswitch-checkbox {
+  display: none;
+}
+
+.onoffswitch-label {
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #999999;
+}
+
+.onoffswitch-inner {
+  display: block;
+  width: 200%;
+  margin-left: -100%;
+  transition: margin 0.3s ease-in 0s;
+}
+
+.onoffswitch-inner:before,
+.onoffswitch-inner:after {
+  display: block;
+  float: left;
+  width: 50%;
+  height: 14px;
+  padding: 0;
+  line-height: 14px;
+  font-size: 10px;
+  color: white;
+  box-sizing: border-box;
+}
+
+.onoffswitch-inner:before {
+  content: " ";
+  padding-left: 5px;
+  background-color: #303030;
+  color: #ffffff;
+}
+
+.onoffswitch-inner:after {
+  content: " ";
+  padding-right: 5px;
+  background-color: #303030;
+  color: #ffffff;
+  text-align: right;
+}
+
+.onoffswitch-switch {
+  display: block;
+  width: 6px;
+  margin: 4px;
+  background: #000000;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 33px;
+  border: 2px solid #999999;
+  transition: all 0.3s ease-in 0s;
+}
+
+.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-inner {
+  margin-left: 0;
+}
+
+.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-switch {
+  right: 0px;
+}
+
+/* Блок регистров и флагов – отображается справа */
+.memory_flags {
+  display: grid;
+  position: absolute;
+  align-items: left;
+  right: 5px;
+  width: 370px;
+  height: fit-content;
+  gap: 10px;
+  border: 3px#000000;
+  border-style: solid;
+
+  font-family: digital;
+  font-size: 32px;
+  color: #292121;
+}
+
+.memory {
+  display: grid;
+  flex-direction: column;
+  gap: 15px;
+  padding-left: 10px;
+  padding-top: 10px;
+  min-height: 0px;
+  height: fit-content;
+  width:fit-content;
+}
+
+.register {
+  display: flex;
+  height: auto;
+  min-height: 0px;
+  align-content: center;
+}
+
+.register label {
+  width: fit-content;
+  height: fit-content;
+}
+
+.register-display {
+  width: 248px;
+  height: fit-content;
+}
+
+.register-digit {
+  margin: 0 0;
+  padding-left: 14.55px;
+  height: 32px;
+}
+
+.flags {
+  display: grid;
+  flex-direction: column;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  gap: 10px;
+}
+
+.instruction-button {
+  position: relative;
+  background-color: #4a6a8f;
+  color: #fff;
+  border: none;
+  padding: 2px;
+  font-size: 18px;
+  font-family: gost;
+  cursor: pointer;
+  box-shadow: 0px 3px 1px 1px #444141,
+    inset -2px -1px 10px 1px rgba(10, 30, 99, 0.5);
+  transition: 0.05s linear;
+  margin-top: 306px;
+  padding: 10px 12px 10px 10px;
+  /* top, right, bottom , left*/
+  height: 74px;
+}
+
+.instruction-button:hover {
+  background-color: #5f7fa0;
+}
+
+.instruction-button:active {
+  transform: translateY(2px);
+  box-shadow: 0px 1px 0 0 #514d4d,
+    inset -2px -1px 5px 0px rgba(10, 30, 99, 0.5);
+}

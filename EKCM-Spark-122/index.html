@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>ЭКВМ «Искра-122»</title>
+	<link rel="stylesheet" href="./index.css" />
+</head>
+<body>
+  <!-- Главный контейнер для центрирования калькулятора -->
+  <div class="calculator">
+    <div class="calculator__body">
+      <!-- Кнопка для открытия инструкции в новой вкладке -->
+      <button class="instruction-button" onclick="window.open('./instr.html', '_blank')">
+        Инструкция
+      </button>
+      <!-- Основной блок калькулятора -->
+      <div id="myCalc">
+        
+        <!-- Декоративный верхний элемент (имитация корпуса) -->
+        <svg class="top-svg" viewBox="675 0 790 790">
+          <use href="images/iskra-122-1.svg#svg1"></use>
+        </svg>
+        
+        <!-- Блок экрана -->
+        <div class="screen-section">
+          <div class="screen-holder">
+            <div class="screen">
+              <!-- Экран состоит из 17 позиций:
+                1-я – знак минус (отдельный элемент)
+                2-16 – цифры (16 штук)
+                Между каждой парой цифр – точки (запятые) для имитации разрядов
+                Все элементы изначально скрыты (opacity: 0) и зажигаются через JS -->
+              <p class="screen-item digit">-</p><!-- Знак минус -->
+              <p class="screen-item digit">0</p><!-- Цифра разряда 16 -->
+              <p class="screen-item dot">.</p> 
+              <p class="screen-item digit">0</p><!-- Цифра разряда 15 -->
+              <p class="screen-item dot">.</p>  <!-- Точка между 15 и 14 разрядом -->
+              <p class="screen-item digit">0</p><!-- 14 разряд -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 13 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 12 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 11 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 10 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 9 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 8 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 7 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 6 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 5 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 4 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 3 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 2 -->
+              <p class="screen-item dot">.</p>
+              <p class="screen-item digit">0</p><!-- 1 (младший разряд) -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Табличка с названием -->
+        <div class="calculator-title">
+          <p id="label">ИСКРА-122</p>
+          <p id="label_backgroung"></p>
+        </div>
+          
+        <!-- Клавиатура -->
+        <div class="keyboard">
+          <!-- Переключатель включения -->
+          <div class="switch-row">
+            <div class="onoffswitch">
+              <!-- Чекбокс для выключателя (стилизован через CSS) -->
+              <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" />
+              <label class="onoffswitch-label" for="myonoffswitch">
+                <span class="onoffswitch-inner"></span>
+                <span class="onoffswitch-switch"></span>
+              </label>
+            </div>
+          </div>
+
+         <!-- Переключатель точности вычислений (число значащих цифр) -->
+          <div class="precision">
+            <div class="precision-row">
+              <button class="precision-button" data-precision="0"></button>
+              <button class="precision-button" data-precision="13"></button>
+              <button class="precision-button" data-precision="11"></button>
+              <button class="precision-button" data-precision="9"></button>
+              <button class="precision-button" data-precision="7"></button>
+              <button class="precision-button" data-precision="5"></button>
+              <button class="precision-button" data-precision="3"></button>
+            </div>
+            <div class="precision-row-labels">
+              <p>B</p>
+              <p value="13">13</p><p value="11">11</p><p value="9">9</p>
+              <p value="7">7</p><p value="5">5</p><p value="3">3</p>
+            </div>
+          </div>
+          
+          <!-- Сетка кнопок (5 колонок) -->
+          <div class="keys">
+            <!-- Первая панель: А5, Ск, А4, А1, А3, А2, 3, 2 -->
+            <div class="keys-memory">
+              <button class="memory-button" value="A5">A5</button>
+              <button class="big-button" value="СК">CK</button>   <!-- Сброс/очистка -->
+              <button class="memory-button" value="A4">A4</button>
+              <button class="memory-button" value="A1">A1</button> <!-- Регистр памяти 1 -->
+              <button class="memory-button" value="A3">A3</button>
+              <button class="memory-button" value="A2">A2</button>
+              <button class="memory-button" value="3"><span class="circle-value">3</span></button>
+              <button class="memory-button" value="2"><span class="circle-value">2</span></button>
+            </div>
+            <!-- Вторая панель: цифры и точка -->
+            <div class="digits">
+              <button value="7">7</button>
+              <button value="8">8</button>
+              <button value="9">9</button>
+              <button value="4">4</button>
+              <button value="5">5</button>
+              <button value="6">6</button>
+              <button value="1">1</button>
+              <button value="2">2</button>
+              <button value="3">3</button>
+              <button value="0">0</button>
+              <button value=".">.</button><!-- Десятичная точка -->
+            </div>
+            <!-- Третья панель: стандартные операции + обратное деление, 
+                                смена знака, возведение в степень -->
+            <div class="operations">
+              <button class="math-button" value="-">−</button><!-- Вычитание -->
+              <button class="math-button" value="/">÷</button><!-- Деление -->
+              <button class="math-button" value="invdiv">ģ</button><!-- Обратное деление -->
+              <button class="math-button" value="+">+</button><!-- Сложение -->
+              <button class="math-button" value="*">•</button><!-- Умножение -->
+              <button class="math-button" value="√">√</button><!-- Квадратный корень -->
+              <button class="math-button" value="**">↑</button><!-- Степень -->
+              <button class="math-button" value="=">=</button>
+              <button class="math-button" value="/-/">/-/</button> <!-- Смена знака -->
+            </div>
+            <!-- Четвертая панель: вывод в печать, выделение целой части, скобки -->
+            <div class="additional">
+              <button onclick="window.print()" class="big-button" value="()">ˆ</button><!-- Печать --> 
+              <button class="big-button" value="ВЦ">/</button><!-- Выделение целой части -->
+              <button class="math-button" value=")">)</button><!-- Скобка закр -->
+              <button class="math-button" value="(">(</button><!-- Скобка откр -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Блок регистров и флагов (отображает состояние памяти и флаги) -->
+    <div class="memory_flags">
+      <div class="memory">
+        <!-- Регистры A1–A5 (сохраняемые числа).
+              .register-display заполняется скриптом динамически: одна строка
+              .register-digit на каждое значение в стеке регистра (верхнее -
+              то, что уйдёт на экран следующим при извлечении).
+              .register-count - бейдж с количеством значений в стеке; заметен
+              только у A2/A3, куда можно положить больше одного числа. -->
+        <div class="register" id="register_A1">
+          <label>A1 =</label>
+          <div class="register-display"><p class="register-digit">0000000000000000</p></div>
+          <span class="register-count"></span>
+        </div>
+        <div class="register" id="register_A2">
+          <label>A2 =</label>
+          <div class="register-display"><p class="register-digit">0000000000000000</p></div>
+          <span class="register-count"></span>
+        </div>
+        <div class="register" id="register_A3">
+          <label>A3 =</label>
+          <div class="register-display"><p class="register-digit">0000000000000000</p></div>
+          <span class="register-count"></span>
+        </div>
+        <div class="register" id="register_A4">
+          <label>A4 =</label>
+          <div class="register-display"><p class="register-digit">0000000000000000</p></div>
+          <span class="register-count"></span>
+        </div>
+        <div class="register" id="register_A5">
+          <label>A5 =</label>
+          <div class="register-display"><p class="register-digit">0000000000000000</p></div>
+          <span class="register-count"></span>
+        </div>
+      </div>
+      <!-- Блок флагов состояния -->
+      <div class="flags">
+        <div class="flag"><label>OP:</label><span id="flag_operation">0</span></div>        <!-- Операция -->
+        <div class="flag"><label>OF:</label><span id="flag_overflow">0</span></div>         <!-- Переполнение -->
+        <div class="flag"><label>PF:</label><span id="flag_precision">0</span></div>        <!-- Точность вычисления -->
+      </div>
+    </div>
+
+  </div>
+  <!-- Подключение JavaScript -->
+  <script src="./script.js"></script>
+</body>
+</html>
