@@ -273,3 +273,33 @@ body {
 .preparation1_6 table{
     justify-content: center;
 }
+
+.additional_1 table{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+    width:100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.additional_1 th{
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    margin:0;
+    padding: 0;
+    text-align: center;
+}
+
+.additional_1 th+th{
+    border-left:2px solid #000;
+}
+
+.additional_1 tr{
+    vertical-align: center;
+    text-align: center;
+}
+
+.additional_1 tr+tr{
+    margin-top: 10px;
+}
