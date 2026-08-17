@@ -99,6 +99,7 @@ body {
     opacity:80%;
     margin:0;
 }
+
 /*1.4 ПОРЯДОК РАБОТЫ*/
 .preparation1_4 h2{
     text-align: center;
@@ -258,4 +259,17 @@ body {
     height: 13px;
     border: 3px solid #000000;
     border-radius: 50%;
+}
+
+/*1.5 ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ*/
+.preparation1_5{
+    text-indent:1cm;
+}
+
+/*1.6 Перечень проблем*/
+.preparation1_6 h2{
+    text-align: center;
+}
+.preparation1_6 table{
+    justify-content: center;
 }
