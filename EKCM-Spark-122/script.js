@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * Калькулятор "Искра-122".
  *
@@ -170,6 +169,7 @@ function createCalculator() {
     state.powered = false;
     renderPoweredOff();
     updateFlag('precision', 0);
+    resetRegisters();
   }
 
   function resetState() {
@@ -284,10 +284,10 @@ function createCalculator() {
       renderRegisters();
       return;
     }
-
     if (state.hasValue) {
-      state.memory[name] = parseFloat(state.currentValue);
-      recallValue(stored);
+      const value = parseFloat(state.currentValue);
+      state.memory[name] = value;
+      recallValue(value);
     } else {
       recallValue(stored);
       state.memory[name]=null;
@@ -882,6 +882,12 @@ function createCalculator() {
   function resetFlags() {
     updateFlag('operation', 0);
     updateFlag('overflow', 0);
+  }
+
+  function resetRegisters() {
+     for (const key in state.memory) {
+        state.memory[key] = null;
+    }
   }
 
   return { init };

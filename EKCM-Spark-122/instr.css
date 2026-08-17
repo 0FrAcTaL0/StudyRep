@@ -14,7 +14,9 @@ body {
     background-size: 100% 1.2em;
     font-size: 16px;
 }
-
+.gost{
+    font-family: gost;
+}
 /*ВСТУПЛЕНИЕ*/
 .introduction{
     padding-top: 50px;
@@ -103,6 +105,21 @@ body {
 }
 .preparation1_4 p{
     text-indent: 1cm;
+}
+#note{
+    font-size: 14px !important;
+    opacity: 75% !important;
+}
+#note p{
+    margin:0;
+    line-height: 1.5em;
+}
+#note p+p{
+    margin:0;
+}
+#note .circle {
+    border: 3px solid #000000;
+    border-radius: 50%;
 }
 /*Клавишы управления Таблица 1*/
 .control-keys h3{
@@ -222,4 +239,23 @@ body {
     margin-left: 5px;
     top: -0.7em;
     white-space: nowrap;
+}
+.examples .square {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #000;
+    width:16px;
+    height:14px;
+    font-size:10px;
+    font-weight: bold;
+}
+.examples .circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border: 3px solid #000000;
+    border-radius: 50%;
 }

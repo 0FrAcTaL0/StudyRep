@@ -26,8 +26,6 @@
     <h2>ВВЕДЕНИЕ</h2>
 
     <p1>Настоящая инструкция предназначена для изучения и правильной эксплуатации электронной клавишной вычислительной машины ЭКВМ «Искра-122».</p1><br>
-    <p value="note"><strong>Важно для данного проекта:</strong> калькулятор является браузерным эмулятором и запускается исключительно через HTTP/HTTPS-сервер. Не открывайте <code>index.html</code> или <code>instr.html</code> напрямую из файловой системы.</p>
-
     <p2>Инструкция содержит следующие разделы:</p2>
         <ul>
             <li>подготовка к работе;</li>
@@ -70,391 +68,413 @@
 <!-- Страница 9 -->
 
 <div class="calc-layout">
-    <img class="picture-calc" src="/images/Общий вид панели управления.png"/>
+    <img class="picture-calc" src="images/Общий вид панели управления.png"/>
     <p>Рис. 1</p>
 </div>
 <!-- Страница 10 -->
 <div class="preparation1_4">
     <h2>1.4. Порядок работы</h2>
-    <p>1.4.1. После включения эмулятора число вводится нажатием экранных кнопок «0»–«9». Для дробного числа используется кнопка «.». При вводе правильной дроби после «0» следующая цифра автоматически начинает дробную часть, например последовательность «0», «5» формирует 0,5.</p>
-    <p>1.4.2. Для отрицательного числа сначала введите число, затем нажмите кнопку «/-/». Положительный знак отдельно не вводится.</p>
-    <p>1.4.3. При ошибке ввода используйте «CK». Кнопка сбрасывает текущее вычисление, но не сбрасывает выбранную точность и содержимое регистров памяти.</p>
-    <p>1.4.4. Арифметические операции выполняются кнопками «+», «−», «•» и «÷». После выбора операции введите следующий операнд и нажмите «=». Результат отображается на табло.</p>
-    <p>1.4.5. Кнопка «ģ» выполняет обратное деление, то есть операцию 1/x над текущим числом. Кнопка «√» извлекает квадратный корень. Кнопка «/» выполняет выделение целой части без округления.</p>
-    <p>1.4.6. Возведение в степень выполняется кнопкой «↑». Повторные последовательные нажатия этой кнопки повышают степень: n последовательных нажатий соответствуют степени n+1 от исходного числа. Любое другое действие прерывает такую цепочку.</p>
-    <p>1.4.7. Скобки «(» и «)» поддерживают вложенные выражения и задают приоритет операций. При нажатии «=» незакрытые скобки автоматически закрываются, после чего вычисляется итоговое выражение.</p>
-    <p>1.4.8. Точность задается кнопками «B», «13», «11», «9», «7», «5», «3». Она влияет на результаты последующих вычислений, а не пересчитывает уже отображенное значение. Например, для 8÷9 положения 13, 11, 9, 7, 5 и 3 дают соответственно 0,8888888888889; 0,88888888889; 0,888888889; 0,8888889; 0,88889; 0,889.</p>
-    <p>1.4.9. Табло содержит знак и 16 цифровых разрядов. При превышении доступного диапазона устанавливается флаг переполнения OF; дальнейшая работа с клавиатурой и памятью до сброса не выполняется.</p>
-    <p>1.4.10. Регистры A1–A5 доступны через одноименные кнопки. Если регистр пуст, нажатие соответствующей кнопки сохраняет в него текущее число. Если регистр уже содержит число и на экране есть активное значение, происходит обмен текущего значения с содержимым регистра. Если активного значения на экране нет, содержимое регистра вызывается на экран.</p>
-    <p>1.4.11. Кнопки «2» и «3» в панели памяти не являются обычными цифровыми кнопками: они добавляют текущее значение с экрана соответственно в регистры A2 и A3. Поэтому для накопления сумм используйте именно кнопки с кружками в панели памяти, а для обычного ввода цифр — кнопки цифровой панели.</p>
-    <p>1.4.12. Если A1 уже содержит число и после выбора арифметической операции второй операнд явно не введен, при нажатии «=» эмулятор использует значение A1 как второй операнд, не изменяя сам регистр A1.</p>
-    <p>1.4.13. Кнопка «ˆ» запускает печать средствами браузера (<code>window.print()</code>). Это не вывод на встроенное печатающее устройство физической ЭКВМ.</p>
+        <p>1.4.1. После включения эмулятора число вводится нажатием экранных кнопок «0»–«9». Для дробного числа используется кнопка «.». При вводе правильной дроби после «0» следующая цифра автоматически начинает дробную часть, например последовательность «0», «5» формирует 0,5.</p>
+        <p>1.4.2. Для отрицательного числа сначала введите число, затем нажмите кнопку «/-/». Положительный знак отдельно не вводится.</p>
+        <p>1.4.3. При ошибке ввода используйте «CK». Кнопка сбрасывает текущее вычисление, но не сбрасывает выбранную точность и содержимое регистров памяти.</p>
+        <p>1.4.4. Арифметические операции выполняются кнопками <span class="gost">«+»</span>, <span class="gost">«−»</span>, <span class="gost">«•»</span> и <span class="gost">«÷»</span>. После выбора операции введите следующий операнд и нажмите «=». Результат отображается на табло.</p>
+        <p>1.4.5. Кнопка <span class="gost">«ģ»</span> выполняет обратное деление, то есть операцию 1/x над текущим числом. Кнопка <span class="gost">«√»</span> извлекает квадратный корень. Кнопка <span class="gost">«/»</span> выполняет выделение целой части без округления.</p>
+        <p>1.4.6. Возведение в степень выполняется кнопкой <span class="gost">«↑»</span>. Повторные последовательные нажатия этой кнопки повышают степень: n последовательных нажатий соответствуют степени n+1 от исходного числа. Любое другое действие прерывает такую цепочку.</p>
+        <p>1.4.7. Скобки <span class="gost">«(»</span> и <span class="gost">«)»</span> поддерживают вложенные выражения и задают приоритет операций. При нажатии «=» незакрытые скобки автоматически закрываются, после чего вычисляется итоговое выражение.</p>
+        <p>1.4.8. Точность задается кнопками «B», «13», «11», «9», «7», «5», «3». Она влияет на результаты последующих вычислений, а не пересчитывает уже отображенное значение. Например, для 8÷9 положения 13, 11, 9, 7, 5 и 3 дают соответственно 0,8888888888889; 0,88888888889; 0,888888889; 0,8888889; 0,88889; 0,889.</p>
+        <p>1.4.9. Табло содержит знак и 16 цифровых разрядов. При превышении доступного диапазона устанавливается флаг переполнения OF; дальнейшая работа с клавиатурой и памятью до сброса не выполняется.</p>
+        <p>1.4.10. Регистры A1–A5 доступны через одноименные кнопки. Если регистр пуст, нажатие соответствующей кнопки сохраняет в него текущее число. Если регистр уже содержит число и на экране есть активное значение, происходит обмен текущего значения с содержимым регистра. Если активного значения на экране нет, содержимое регистра вызывается на экран.</p>
+        <p>1.4.11. Кнопки «2» и «3» в панели памяти не являются обычными цифровыми кнопками: они добавляют текущее значение с экрана соответственно в регистры A2 и A3. Поэтому для накопления сумм используйте именно кнопки с кружками в панели памяти, а для обычного ввода цифр — кнопки цифровой панели.</p>
+        <p>1.4.12. Если A1 уже содержит число и после выбора арифметической операции второй операнд явно не введен, при нажатии «=» эмулятор использует значение A1 как второй операнд, не изменяя сам регистр A1.</p>
+        <p>1.4.13. Кнопка <span class="gost">«ˆ»</span> запускает печать средствами браузера (<code>window.print()</code>).</p>
+    <div class="control-keys">
+        <h3>Таблица 1</h3>
+        <p><strong>Клавиши управления</strong></p>
+        <table cellpadding="4" cellspacing="0">
+            <tr>
+                <th>Клавиша</th>
+                <th>Выполняемые действия</th>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">+</span></td>          
+                <td>Сложение</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">-</span></td>        
+                <td>Вычитание</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">•</span></td>        
+                <td>Умножение</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">÷</span></td>        
+                <td>Деление</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">ģ</span></td>  
+                <td>Обратное деление</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">√</span></td>     
+                <td>Операция извлечения квадратного корня</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">↑</span></td>        
+                <td>Возведение в степень</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">/-/</span></td>     
+                <td>Изменение знака числа в регистре клавиатуры</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">=</span></td>        
+                <td>Результат (последовательное нажатие клавиши «=» и «СК» подготавливает машину к работе)</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">ˆ</span></td>   
+                <td>Вывод содержимого регистра клавиатуры на печать</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">/</span></td>       
+                <td>Выделение целой части в смешанном числе</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">)</span></td>      
+                <td>Ввод закрывающей скобки</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">(</span></td>      
+                <td>Ввод открывающей скобки</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">CK</span></td>       
+                <td>Очистка (сброс) содержимого регистра клавиатуры</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">A1</span></td>       
+                <td>Засылка числа в регистр памяти А1 и вызов числа из этого регистра</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">A2</span></td>       
+                <td>Засылка числа в регистр памяти А2 и вызов числа из этого регистра</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">A3</span></td>       
+                <td>Засылка числа в регистр памяти А3 и вызов числа из этого регистра</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">A4</span></td>       
+                <td>Засылка числа в регистр памяти А4 и вызов числа из этого регистра</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key">A5</span></td>       
+                <td>Засылка числа в регистр памяти А5 и вызов числа из этого регистра</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key"><span class="circle">2</span></span></td>      
+                <td>Накопление во втором регистре памяти (А2)</td>
+            </tr>
+            <tr>
+                <td scope="row"><span class="key"><span class="circle">3</span></span></td>      
+                <td>Накопление в третьем регистре памяти (А3)</td>
+            </tr>
+        </table>
+    </div>
+    <!-- Страница 12 -->
+    <div class="examples">
+        <p id="example"><strong>Таблица 2</strong></p>
+        <p><strong>Примеры вычислений</strong></p>
+        <table border="1" cellpadding="4" cellspacing="0" class="examples_table">
+            <colgroup>
+                <col class="calculation-column">
+                <col class="example-column">
+                <col class="keystrokes_sequence">
+            </colgroup>
+            <tr>
+                <th>Вычисление</th>
+                <th>Пример</th>
+                <th>Последовательность нажатия клавиш</th>
+            </tr>
+            <tr>
+                <td scope="row">Сложение, вычитание, изменение знака</td>
+                <td>5,5+4-6+3-2-(-7) = 11,5</td>
+                <td>
+                    5
+                    <span class="square">,</span>
+                    5
+                    <span class="square">+</span>
+                    4
+                    <span class="square">-</span>
+                    6
+                    <span class="square">+</span>
+                    3
+                    <span class="square">-</span>
+                    2
+                    <span class="square">-</span>
+                    7
+                    <span class="square">/-/</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <tr>
+                <td scope="row">Умножение</td>
+                <td>2×5×3,4×3 = 102</td>
+                <td>
+                    2
+                    <span class="square">•</span>
+                    5
+                    <span class="square">•</span>
+                    3
+                    <span class="square">,</span>
+                    4
+                    <span class="square">•</span>
+                    3
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <tr>
+                <td scope="row">Деление</td>
+                <td>2,5:5:(-0,5) = -1</td>
+                <td>
+                    2
+                    <span class="square">,</span>
+                    5
+                    <span class="square">÷</span>
+                    5
+                    <span class="square">÷</span>
+                    0
+                    <span class="square">,</span>
+                    5
+                    <span class="square">/-/</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <tr>
+                <td scope="row">Обратное деление</td>
+                <td>20:5=4<br>20:4=5<br>20:10=2</td>
+                <td>
+                    20
+                    <span class="square">A1</span>
+                    <span class="square">÷</span>
+                    5
+                    <span class="square">=</span><br>
+                    4
+                    <span class="square">ģ</span>
+                    <span class="square">=</span><br>
+                    10
+                    <span class="square">ģ</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Умножение на постоянный множитель</td>
+                <td>2×5=10<br>3×5=15<br>4×5=20</td>
+                <td>
+                    2
+                    <span class="square">•</span>
+                    5
+                    <span class="square">A1</span>
+                    <span class="square">=</span><br>
+                    3
+                    <span class="square">•</span>
+                    <span class="square">=</span><br>
+                    4
+                    <span class="square">•</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Умножение с одновременным суммированием сомножителей и результатов вычислений</td>
+                <td>2×3=6<br>4×5=20<br>6×7=42<br>Σ₁=12&nbsp;&nbsp;&nbsp;Σ₂=68</td>
+                <td>
+                    2
+                    <span class="square">A2</span>
+                    <span class="square">•</span>
+                    3
+                    <span class="square">=</span>
+                    <span class="square">A3</span><br>
+
+                    4
+                    <span class="square"><span class="circle">2</span></span>
+                    <span class="square">•</span>
+                    5
+                    <span class="square">=</span>
+                    <span class="square"><span class="circle">3</span></span><br>
+
+                    6
+                    <span class="square"><span class="circle">2</span></span>
+                    <span class="square">•</span>
+                    7
+                    <span class="square">=</span>
+                    <span class="square"><span class="circle">3</span></span><br>
+
+                    <span class="square">A2</span>
+                    <span class="square">СК</span>
+                    <span class="square">A3</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Возведение в степень</td>
+                <td>2²+3²-4³-5⁵ = -3176</td>
+                <td>
+                    2
+                    <span class="square">↑</span>
+                    <span class="square">+</span>
+                    3
+                    <span class="square">↑</span>
+                    <span class="square">-</span>
+                    4
+                    <span class="square">↑</span>
+                    <span class="square">↑</span>
+                    <span class="square">-</span>
+                    5
+                    <span class="square">↑</span>
+                    <span class="square">↑</span>
+                    <span class="square">↑</span>
+                    <span class="square">↑</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Извлечение квадратного корня</td>
+                <td>√(200:4×20/10) = 10</td>
+                <td>
+                    200
+                    <span class="square">÷</span>
+                    4
+                    <span class="square">•</span>
+                    20
+                    <span class="square">÷</span>
+                    10
+                    <span class="square">=</span>
+                    <span class="square">√</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Использование скобок</td>
+                <td>1. ((12×5+4)×5+8)×5 = 1640<br>2. 2×(4×5+3) = 46</td>
+                <td>
+                    <span class="square">(</span>
+                    <span class="square">(</span>
+                    12
+                    <span class="square">•</span>
+                    5
+                    <span class="square">A1</span>
+                    <span class="square">+</span>
+                    4
+                    <span class="square">)</span>
+                    <span class="square">•</span>
+                    <span class="square">+</span>
+                    8
+                    <span class="square">)</span>
+                    <span class="square">•</span>
+                    <span class="square">=</span><br>
+
+                    2
+                    <span class="square">•</span>
+                    <span class="square">(</span>
+                    4
+                    <span class="square">•</span>
+                    5
+                    <span class="square">+</span>
+                    3
+                    <span class="square">)</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <!-- •  ÷  ģ  √  ↑ -->
+            <tr>
+                <td scope="row">Положение переключателя точности «5»</td>
+                <td rowspan="2">
+                    <div class="fraction-example">
+                        <div class="fraction-numerator">
+                            2 + 3 + 4 + 5 + 6
+                        </div>
+                        <div class="fraction-line">
+                            <span>= 0,22222</span>
+                        </div>
+                        <div class="fraction-denominator">
+                            2² + 3² + 4² + 5² + 6²
+                        </div>
+                    </div>
+                </td>
+                <td rowspan="2">
+                    <span class="square">(</span>
+                    2
+                    <span class="square">A1</span>
+                    <span class="square">+</span>
+                    3
+                    <span class="square">A2</span>
+                    <span class="square">+</span>
+                    4
+                    <span class="square">A3</span>
+                    <span class="square">+</span>
+                    5
+                    <span class="square">A4</span>
+                    <span class="square">+</span>
+                    6
+                    <span class="square">A5</span>
+                    <span class="square">)</span>
+                    <span class="square">÷</span>
+                    <span class="square">(</span>
+                    <span class="square">A1</span>
+                    <span class="square">↑</span>
+                    <span class="square">+</span>
+                    <span class="square">A2</span>
+                    <span class="square">↑</span>
+                    <span class="square">+</span>
+                    <span class="square">A3</span>
+                    <span class="square">↑</span>
+                    <span class="square">+</span>
+                    <span class="square">A4</span>
+                    <span class="square">↑</span>
+                    <span class="square">+</span>
+                    <span class="square">A5</span>
+                    <span class="square">↑</span>
+                    <span class="square">=</span>
+                </td>
+            </tr>
+            <tr>
+                <td scope="row">Использование запоминающих регистров</td>
+            </tr>
+        </table>
+    </div>
+    <!-- Страница 14 -->  <!-- •  ÷  ģ  √  ↑ -->
+    <div id="note">
+        <p>Примечание. Обращение к регистрам памяти осуществляется по нажатию одной из клавиш «А1», «А2», «А3», «А4», «А5». При этом производится:</p>
+        <p>а) засылка в соответствующий регистр памяти, если перед этим следовали:</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ввод числа;</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;операции <span class="gost">«↑», «√», «ˆ», «/-/»</span>;</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;нажатие исполнительных клавиш <span class="gost">«=»</span>, «)»;</p>
+        <p>б) выборка соответствующего регистра памяти, если перед этим следовала любая из остальных операций <span class="gost">«+», «-», «•», «÷», «ģ», <span class="circle">2</span>, <span class="circle">3</span>, «СК», «А1», «А2», «А3», «А4», «А5», «[печать]»</span>, кроме операции «(», которая не оказывает влияния на правила засылки и выборки.</p>
+        <p>Автоматическая выборка из регистра памяти А1 на месте пропущенного операнда осуществляется, если после нажатия одной из клавиш операций <span class="gost">«+», «-», «•», «÷», «ģ»</span> следует нажатие любой из этих же клавиш или клавиши <span class="gost">«)», «=»</span>.</p>
+    </div>
+    <p>1.4.8. Гашение ранее записанного числа во всех регистрах памяти машины производится автоматически при засылке в них нового числа.</p>
+    <p>1.4.9. Сброс всех регистров, кроме регистров памяти, осуществляется последовательным нажатием клавиш «=» и «СК».</p>
+    <p>1.4.10. Признаком переполнения разрядной сетки машины является высвечивание запятых на цифровом индикаторе после каждого десятичного разряда; при этом для приведения машины в рабочее положение нажмите клавишу «СК» (переполнение наступает в том случае, если количество целых чисел результата больше 16).</p>
+    <p>1.4.11. Во избежание ошибок в вычислениях каждому новому расчету (или возобновлению расчетов после ошибки) должно предшествовать последовательное нажатие клавиш «=» и «СК».</p>
+    <p>1.4.12. Определите работоспособность машины перед началом смены (после перерыва): для этого установите переключатель точности вычислений в положение «В» и решите контрольные примеры:</p>
+    <p style="text-align:center">1234567890 — 1234567891 = —1,</p>
+    <p style="text-align:center">1 — ( (2·3²·4²) / (√5 · √6³) ) + 7/8² = —7,654185920082592</p>
+    <p>1.4.13. Примеры вычислений с указанием последовательности нажатия клавиш сведены в табл. 2.</p>
+    <p>1.4.14. Программы сложных вычислений (для справок) приведены в библиотеке программ (см. приложение 3).</p>
 </div>
 <!-- Страница 11 -->
-<div class="control-keys">
-    <h3>Таблица 1</h3>
-    <p><strong>Клавиши управления</strong></p>
-    <table cellpadding="4" cellspacing="0">
-        <tr>
-            <th>Клавиша</th>
-            <th>Выполняемые действия</th>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">+</span></td>          
-            <td>Сложение</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">-</span></td>        
-            <td>Вычитание</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">•</span></td>        
-            <td>Умножение</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">÷</span></td>        
-            <td>Деление</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">ģ</span></td>  
-            <td>Обратное деление</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">√</span></td>     
-            <td>Операция извлечения квадратного корня</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">↑</span></td>        
-            <td>Возведение в степень</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">/-/</span></td>     
-            <td>Изменение знака числа в регистре клавиатуры</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">=</span></td>        
-            <td>Результат (последовательное нажатие клавиши «=» и «СК» подготавливает машину к работе)</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">ˆ</span></td>   
-            <td>Вывод содержимого регистра клавиатуры на печать</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">/</span></td>       
-            <td>Выделение целой части в смешанном числе</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">)</span></td>      
-            <td>Ввод закрывающей скобки</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">(</span></td>      
-            <td>Ввод открывающей скобки</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">CK</span></td>       
-            <td>Очистка (сброс) содержимого регистра клавиатуры</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">A1</span></td>       
-            <td>Засылка числа в регистр памяти А1 и вызов числа из этого регистра</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">A2</span></td>       
-            <td>Засылка числа в регистр памяти А2 и вызов числа из этого регистра</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">A3</span></td>       
-            <td>Засылка числа в регистр памяти А3 и вызов числа из этого регистра</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">A4</span></td>       
-            <td>Засылка числа в регистр памяти А4 и вызов числа из этого регистра</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key">A5</span></td>       
-            <td>Засылка числа в регистр памяти А5 и вызов числа из этого регистра</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key"><span class="circle">2</span></span></td>      
-            <td>Накопление во втором регистре памяти (А2)</td>
-        </tr>
-        <tr>
-            <td scope="row"><span class="key"><span class="circle">3</span></span></td>      
-            <td>Накопление в третьем регистре памяти (А3)</td>
-        </tr>
-    </table>
-</div>
-<!-- Страница 12 -->
-<div class="examples">
-    <p id="example"><strong>Таблица 2</strong></p>
-    <p><strong>Примеры вычислений</strong></p>
-    <table border="1" cellpadding="4" cellspacing="0" class="examples_table">
-        <colgroup>
-            <col class="calculation-column">
-            <col class="example-column">
-            <col class="keystrokes_sequence">
-        </colgroup>
-        <tr>
-            <th>Вычисление</th>
-            <th>Пример</th>
-            <th>Последовательность нажатия клавиш</th>
-        </tr>
-        <tr>
-            <td scope="row">Сложение, вычитание, изменение знака</td>
-            <td>5,5+4-6+3-2-(-7) = 11,5</td>
-            <td>
-                5
-                <span class="square">,</span>
-                5
-                <span class="square">+</span>
-                4
-                <span class="square">-</span>
-                6
-                <span class="square">+</span>
-                3
-                <span class="square">-</span>
-                2
-                <span class="square">-</span>
-                7
-                <span class="square">/-/</span>
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <tr>
-            <td scope="row">Умножение</td>
-            <td>2×5×3,4×3 = 102</td>
-            <td>
-                2
-                <span class="square">•</span>
-                5
-                <span class="square">•</span>
-                3
-                <span class="square">,</span>
-                4
-                <span class="square">•</span>
-                3
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <tr>
-            <td scope="row">Деление</td>
-            <td>2,5:5:(-0,5) = -1</td>
-            <td>
-                2
-                <span class="square">,</span>
-                5
-                <span class="square">÷</span>
-                5
-                <span class="square">÷</span>
-                0
-                <span class="square">,</span>
-                5
-                <span class="square">/-/</span>
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <tr>
-            <td scope="row">Обратное деление</td>
-            <td>20:5=4<br>20:4=5<br>20:10=2</td>
-            <td>
-                20
-                <span class="square">A1</span>
-                <span class="square">÷</span>
-                5
-                <span class="square">=</span><br>
-                4
-                <span class="square">ģ</span>
-                <span class="square">=</span><br>
-                10
-                <span class="square">ģ</span>
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Умножение на постоянный множитель</td>
-            <td>2×5=10<br>3×5=15<br>4×5=20</td>
-            <td>
-                2
-                <span class="square">•</span>
-                5
-                <span class="square">A1</span>
-                <span class="square">=</span><br>
-                3
-                <span class="square">•</span>
-                <span class="square">=</span><br>
-                4
-                <span class="square">•</span>
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Умножение с одновременным суммированием сомножителей и результатов вычислений</td>
-            <td>2×3=6<br>4×5=20<br>6×7=42<br>Σ₁=12&nbsp;&nbsp;&nbsp;Σ₂=68</td>
-            <td>
-                2
-                <span class="square">A2</span>
-                <span class="square">•</span>
-                3
-                <span class="square">=</span>
-                <span class="square">A3</span><br>
 
-                4
-                <span class="square"><span class="circle">2</span></span>
-                <span class="square">•</span>
-                5
-                <span class="square">=</span>
-                <span class="square"><span class="circle">3</span></span><br>
-
-                6
-                <span class="square"><span class="circle">2</span></span>
-                <span class="square">•</span>
-                7
-                <span class="square">=</span>
-                <span class="square"><span class="circle">3</span></span><br>
-
-                <span class="square"><span class="circle">A2</span></span>
-                <span class="square">СК</span>
-                <span class="square"><span class="circle">A3</span></span>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Возведение в степень</td>
-            <td>2²+3²-4³-5⁵ = -3176</td>
-            <td>
-                2
-                <span class="square">↑</span>
-                <span class="square">+</span>
-                3
-                <span class="square">↑</span>
-                <span class="square">-</span>
-                4
-                <span class="square">↑</span>
-                <span class="square">↑</span>
-                <span class="square">-</span>
-                5
-                <span class="square">↑</span>
-                <span class="square">↑</span>
-                <span class="square">↑</span>
-                <span class="square">↑</span>
-                <span class="square">=</span>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Извлечение квадратного корня</td>
-            <td>√(200:4×20/10) = 10</td>
-            <td>
-                200
-                <span class="square">÷</span>
-                4
-                <span class="square">•</span>
-                20
-                <span class="square">÷</span>
-                10
-                <span class="square">=</span>
-                <span class="square">√</span>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Использование скобок</td>
-            <td>1. ((12×5+4)×5+8)×5 = 1640<br>2. 2×(4×5+3) = 46</td>
-            <td>
-                <span class="square">(</span>
-                <span class="square">(</span>
-                12
-                <span class="square">•</span>
-                5
-                <span class="square">A1</span>
-                <span class="square">+</span>
-                4
-                <span class="square">)</span>
-                <span class="square">•</span>
-                <span class="square">+</span>
-                8
-                <span class="square">)</span>
-                <span class="square">•</span>
-                <span class="square">=</span><br>
-
-                2
-                <span class="square">•</span>
-                <span class="square">(</span>
-                4
-                <span class="square">•</span>
-                5
-                <span class="square">+</span>
-                3
-                <span class="square">)</span>
-                <span class="square">=</span><br>
-            </td>
-        </tr>
-        <!-- •  ÷  ģ  √  ↑ -->
-        <tr>
-            <td scope="row">Положение переключателя точности «5»</td>
-            <td rowspan="2">
-                <div class="fraction-example">
-                    <div class="fraction-numerator">
-                        2 + 3 + 4 + 5 + 6
-                    </div>
-                    <div class="fraction-line">
-                        <span>= 0,22222</span>
-                    </div>
-                    <div class="fraction-denominator">
-                        2² + 3² + 4² + 5² + 6²
-                    </div>
-                </div>
-            </td>
-            <td rowspan="2">
-                <span class="square">(</span>
-                2
-                <span class="square">A1</span>
-                <span class="square">+</span>
-                3
-                <span class="square">A2</span>
-                <span class="square">+</span>
-                4
-                <span class="square">A3</span>
-                <span class="square">+</span>
-                5
-                <span class="square">A4</span>
-                <span class="square">+</span>
-                6
-                <span class="square">A5</span>
-                <span class="square">)</span>
-                <span class="square">÷</span>
-                <span class="square">(</span>
-                5
-                <span class="square">A4</span>
-                <span class="square">+</span>
-                6
-                <span class="square">A5</span>
-
-            </td>
-        </tr>
-        <tr>
-            <td scope="row">Использование запоминающих регистров</td>
-        </tr>
-    </table>
-</div>
 
 <!-- Страница 21 -->
 
 <h2>2.3. Техническое обслуживание браузерного эмулятора</h2>
-
-<p>2.3.1. Эмулятор не требует физического технического обслуживания, ремонта, вскрытия корпуса, замены микросхем, предохранителей, кабелей или других аппаратных компонентов.</p>
-
-<p>2.3.2. Основное условие корректной работы — запуск проекта через HTTP/HTTPS-сервер. Открытие страниц напрямую через <code>file://</code> не является штатным способом запуска и не должно использоваться.</p>
-
-<p>2.3.3. При изменении <code>index.html</code>, <code>script.js</code>, таблиц стилей или изображений повторно загрузите страницу через сервер, чтобы браузер использовал актуальные файлы проекта.</p>
-
-<p>2.3.4. При подозрении на ошибку сначала проверьте консоль разработчика браузера и убедитесь, что <code>script.js</code>, CSS и изображения загружаются без ошибок. После этого повторите контрольный пример.</p>
-
-<p>2.3.5. Для воспроизводимой проверки рекомендуется каждый новый сеанс начинать с включения эмулятора, нажатия «CK» и явной установки требуемого положения точности.</p>
-
+<p>2.3.1. Основное условие корректной работы — запуск проекта через HTTP/HTTPS-сервер. Открытие страниц напрямую через <code>file://</code> не является штатным способом запуска и не должно использоваться.</p>
+<p>2.3.2. При изменении <code>index.html</code>, <code>script.js</code>, таблиц стилей или изображений повторно загрузите страницу через сервер, чтобы браузер использовал актуальные файлы проекта.</p>
+<p>2.3.3. При подозрении на ошибку сначала проверьте консоль разработчика браузера и убедитесь, что <code>script.js</code>, CSS и изображения загружаются без ошибок. После этого повторите контрольный пример.</p>
+<p>2.3.4. Для воспроизводимой проверки рекомендуется каждый новый сеанс начинать с включения эмулятора, нажатия «CK» и явной установки требуемого положения точности.</p>
 <h2>2.4. Перечень наиболее часто встречающихся проблем эмулятора</h2>
 
 <table border="1" cellpadding="4" cellspacing="0">
