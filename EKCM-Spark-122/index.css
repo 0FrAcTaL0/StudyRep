@@ -1,4 +1,3 @@
-/* Подключение шрифта для имитации газоразрядных индикаторов */
 @font-face {
   font-family: 'digital';
   src: url("fonts/digital.ttf") format('truetype');
