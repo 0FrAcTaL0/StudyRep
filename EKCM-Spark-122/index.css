@@ -33,7 +33,7 @@ body {
   display: flex;
   justify-content: center;
   position: relative;
-  left: -85px;
+  /* left: -85px; */
 }
 
 /* Стиль самого калькулятора (основная плата) */
