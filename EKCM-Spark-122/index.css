@@ -8,17 +8,6 @@
   src: url("fonts/GOSTTypeB.woff2") format('woff2');
 }
 
-@media print {
-  @page {
-    size: landscape;
-  }
-  html {
-    transform: scale(0.84);
-    transform-origin: left;
-    width: calc(100% / 0.84);
-  }
-}
-
 /* Общие стили для всей страницы – делаем её на всю высоту */
 html {
   height: 100%;
