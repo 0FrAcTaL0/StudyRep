@@ -29,17 +29,18 @@ body {
 }
 
 /* Основной блок (рамка калькулятора + тени) */
-.calculator__body {
+.calc{
   display: flex;
   justify-content: center;
-  position: relative;
+  align-items: center;
+  position: static;
   /* left: -85px; */
 }
 
 /* Стиль самого калькулятора (основная плата) */
-#myCalc {
-  width: 825px;
-  height: 700px;
+.calc_body{
+  width: 100%;
+  height: 100%;
   background-color: #d8dbd3;
   box-sizing: border-box;
   border: 20px solid #9aa3a8;
