@@ -7,16 +7,15 @@
 	<link rel="stylesheet" href="./index.css" />
 </head>
 <body>
-  <!-- Главный контейнер для центрирования калькулятора -->
+  <!-- Главный контейнер калькулятора -->
   <div class="calculator">
     <div class="calc">
       <!-- Кнопка для открытия инструкции в новой вкладке -->
       <button class="instruction-button" onclick="window.open('./instr.html', '_blank')">Инструкция</button>
       <!-- Основной блок калькулятора -->
       <div class="calc_body">
-        
-        <!-- Декоративный верхний элемент (имитация корпуса) -->
-        <svg class="top-svg" viewBox="675 0 790 790">
+        <!-- Декоративный верхний элемент-->
+        <svg class="top-svg" viewBox="0 0 2124 600">
           <use href="images/iskra-122-1.svg#svg1"></use>
         </svg>
         
@@ -29,46 +28,46 @@
                 2-16 – цифры (16 штук)
                 Между каждой парой цифр – точки (запятые) для имитации разрядов
                 Все элементы изначально скрыты (opacity: 0) и зажигаются через JS -->
-              <p class="screen-item digit">-</p><!-- Знак минус -->
-              <p class="screen-item digit">0</p><!-- Цифра разряда 16 -->
-              <p class="screen-item dot">.</p> 
-              <p class="screen-item digit">0</p><!-- Цифра разряда 15 -->
-              <p class="screen-item dot">.</p>  <!-- Точка между 15 и 14 разрядом -->
-              <p class="screen-item digit">0</p><!-- 14 разряд -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 13 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 12 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 11 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 10 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 9 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 8 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 7 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 6 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 5 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 4 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 3 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 2 -->
-              <p class="screen-item dot">.</p>
-              <p class="screen-item digit">0</p><!-- 1 (младший разряд) -->
+              <span class="screen-item digit">-</span><!-- Знак минус -->
+              <span class="screen-item digit">0</span><!-- Цифра разряда 16 -->
+              <span class="screen-item dot">.</span> 
+              <span class="screen-item digit">0</span><!-- Цифра разряда 15 -->
+              <span class="screen-item dot">.</span>  <!-- Точка между 15 и 14 разрядом -->
+              <span class="screen-item digit">0</span><!-- 14 разряд -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 13 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 12 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 11 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 10 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 9 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 8 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 7 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 6 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 5 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 4 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 3 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 2 -->
+              <span class="screen-item dot">.</span>
+              <span class="screen-item digit">0</span><!-- 1 (младший разряд) -->
             </div>
           </div>
         </div>
 
         <!-- Табличка с названием -->
         <div class="calculator-title">
-          <p id="label">ИСКРА-122</p>
-          <p id="label_backgroung"></p>
+          <span id="label">ИСКРА-122</span>
+          <span id="label_backgroung"></span>
         </div>
           
         <!-- Клавиатура -->
@@ -196,7 +195,6 @@
         <div class="flag"><label>PF:</label><span id="flag_precision">0</span></div>        <!-- Точность вычисления -->
       </div>
     </div>
-
   </div>
   <!-- Подключение JavaScript -->
   <script src="./script.js"></script>

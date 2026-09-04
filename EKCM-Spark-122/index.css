@@ -8,7 +8,7 @@
   src: url("fonts/GOSTTypeB.woff2") format('woff2');
 }
 
-/* Общие стили для всей страницы – делаем её на всю высоту */
+/* */
 html {
   height: 100%;
   width: 100%;
@@ -20,51 +20,50 @@ body {
   background-color: #ffffff;
 }
 
-/* Контейнер калькулятора – центрируем по вертикали и горизонтали */
+/* */
 .calculator {
   width: 100%;
   height: 100%;
   display: block;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Основной блок (рамка калькулятора + тени) */
-.calc{
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: static;
-  /* left: -85px; */
+  align-items: center;
+  justify-content: center;
 }
 
-/* Стиль самого калькулятора (основная плата) */
+/* */
+.calc{
+  display: block flex;
+  position: static;
+  justify-content: center;
+  align-items: center;
+}
+
+/* */
 .calc_body{
-  width: 100%;
+  display: block flex;
+  position: relative;
+  width: 50%;
   height: 100%;
   background-color: #d8dbd3;
   box-sizing: border-box;
   border: 20px solid #9aa3a8;
-  position: relative;
 }
 
 .top-svg {
-  position: absolute;
-  top: 32px;
-  height: 200px;
-  width: 792px;
-  transform: scale(1.463, 1.32);
+  display: block;
+  position: static;
+  width:100%;
+  height:auto;
 }
 
-/* Блок экрана – позиционируем поверх тёмного фона */
+/* */
 .screen-section {
-  z-index: 3;
+  /* z-index: 3;
   height: 50px;
   width: 660px;
   top: 290px;
-  right: 63px;
-  position: absolute;
-  transform: scale(1.15);
+  right: 63px; */
+  position: static;
 }
 
 /* Сам экран */
@@ -99,7 +98,7 @@ body {
 
 /* Название модели – стилизованная табличка*/
 .calculator-title {
-  position: absolute;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,7 +114,7 @@ body {
 
 .calculator-title::before {
   content: "";
-  position: absolute;
+  position: static;
   inset: 0;
   background: #b8bdb3;
   border: 2px solid #0000008a;
@@ -139,19 +138,13 @@ body {
 
 /* Клавиатура – область с кнопками */
 .keyboard {
-  height: 180px;
-  width: 470px;
-  top: 450px;
-  right: 60px;
   background-color: #d8dbd3;
-  position: absolute;
-  transform: scale(1.1);
+  position: relative;
 }
 
 .precision {
   display: flex;
-  position: absolute;
-  transform: translate(-150px, -8px) scale(0.93);
+  position: relative;
   border: 0.5px#000 solid !important;
   box-shadow: 0px 0px 2px 3px #9f9f9e;
   border-radius: 5%;
@@ -170,18 +163,17 @@ body {
   align-items: center;
   gap: 12px;
   color: #333;
-  transform: scale(1, 0.6);
 }
 
 /* Кнопки точности*/
 .precision-button {
-  height: 30px !important;
-  width: 35px !important;
+  height: 30px;
+  width: 35px;
   padding: 0;
   cursor: pointer;
   transition: 0.05s linear;
   text-align: center;
-  background-color: #000 !important;
+  background-color: #000;
 }
 
 .precision-button[data-precision="0"] {
@@ -189,7 +181,6 @@ body {
 }
 
 .precision-row-labels {
-  transform: translateY(-10.2px);
   height: auto;
   width: 40px;
   display: grid;
@@ -244,7 +235,6 @@ body {
 /*Контейнер для всех клавиш*/
 .keys {
   display: flex;
-  transform: translateX(-20px);
   gap: 35px;
 }
 
@@ -276,7 +266,6 @@ body {
 /*Вторая панель, клавиши цифр и точка*/
 .digits {
   display: grid;
-  /* transform: translateX(30px); */
   grid-template-columns: 40px 40px 40px;
   gap: 2px 2px;
   background-color: #000000;
@@ -331,7 +320,6 @@ body {
 
 .additional {
   display: grid;
-  /* transform:translateX(90px); */
   gap: 2px 2px;
   font-family: gost;
   background-color: #000000;
@@ -341,7 +329,7 @@ body {
 }
 
 /* Общий стиль для всех кнопок */
-#myCalc button {
+.calc_body button {
   display: inline-block;
   height: auto;
   width: auto;
@@ -369,11 +357,8 @@ body {
 
 /*Переключатель включения*/
 .switch-row {
-  top: 90px;
-  left: -246.8px;
-  transform: rotate(270deg) scale(1.5);
   display: flex;
-  position: absolute;
+  position: relative;
   align-items: center;
 }
 
@@ -456,9 +441,8 @@ body {
 /* Блок регистров и флагов – отображается справа */
 .memory_flags {
   display: grid;
-  position: absolute;
+  position: relative;
   align-items: left;
-  right: 5px;
   width: 370px;
   height: fit-content;
   gap: 10px;
@@ -524,7 +508,6 @@ body {
   box-shadow: 0px 3px 1px 1px #444141,
     inset -2px -1px 10px 1px rgba(10, 30, 99, 0.5);
   transition: 0.05s linear;
-  margin-top: 306px;
   padding: 10px 12px 10px 10px;
   /* top, right, bottom , left*/
   height: 74px;
@@ -533,7 +516,6 @@ body {
 .instruction-button:hover {
   background-color: #5f7fa0;
 }
-
 .instruction-button:active {
   transform: translateY(2px);
   box-shadow: 0px 1px 0 0 #514d4d,
