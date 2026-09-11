@@ -58,11 +58,6 @@ body {
 
 /* */
 .screen-section {
-  /* z-index: 3;
-  height: 50px;
-  width: 660px;
-  top: 290px;
-  right: 63px; */
   position: static;
 }
 
@@ -99,30 +94,28 @@ body {
 /* Название модели – стилизованная табличка*/
 .calculator-title {
   position: relative;
-  display: flex;
+  display: block flex;
   align-items: center;
   justify-content: center;
-  width: 165px;
-  height: 40px !important;
+  height: 42px;
   min-width: 0px;
-
-  top: 5px;
-  left: 590px;
-
-  transform: scale(0.85);
+  background: #b8bdb3;
+  border: 2px solid #0000008a;
+  width: 120px;
+  z-index: 0;
 }
 
 .calculator-title::before {
   content: "";
   position: static;
   inset: 0;
-  background: #b8bdb3;
-  border: 2px solid #0000008a;
+
+  height:42px;
   z-index: 0;
 }
 
 #label {
-  position: relative;
+  position: static;
   z-index: 1;
   text-align: center;
   color: #000000;
