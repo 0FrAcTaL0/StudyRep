@@ -110,6 +110,12 @@ function createCalculator() {
     };
 
     dom.keyboard = document.querySelector('.keyboard');
+
+    // Раньше вызывались через инлайновые onclick в HTML; атрибуты убраны
+    // из разметки (нестабильны при CSP, не единообразны с остальным
+    // кодом) — обработчики теперь навешиваются здесь, см. bindEvents().
+    dom.instructionButton = document.getElementById('instruction-button');
+    dom.printButton = document.getElementById('print-button');
   }
 
   // ---------- Инициализация ----------
@@ -130,6 +136,22 @@ function createCalculator() {
 
     // Один обработчик на всю клавиатуру вместо слушателя на каждую кнопку
     dom.keyboard.addEventListener('click', onKeyboardClick);
+
+    if (dom.instructionButton) {
+      dom.instructionButton.addEventListener('click', () => {
+        window.open('./instr.html', '_blank');
+      });
+    }
+
+    // Кнопка печати физически находится внутри .keyboard, поэтому клик по
+    // ней также пройдёт через onKeyboardClick (там для value="()" нет
+    // отдельного case — сработает лишь диагностический console.log в
+    // default-ветке handleKey, как и раньше). Печать запускаем отдельно.
+    if (dom.printButton) {
+      dom.printButton.addEventListener('click', () => {
+        window.print();
+      });
+    }
   }
 
   function onKeyboardClick(event) {

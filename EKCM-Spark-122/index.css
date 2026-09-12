@@ -1,164 +1,438 @@
+/* =========================================================================
+   ЭКВМ «Искра-122» — стили
+   -------------------------------------------------------------------------
+/* --------------------------- Общий сброс --------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* --------------------------- Шрифты --------------------------- */
 @font-face {
   font-family: 'digital';
   src: url("fonts/digital.ttf") format('truetype');
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
 }
 
 @font-face {
   font-family: 'gost';
   src: url("fonts/GOSTTypeB.woff2") format('woff2');
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
 }
 
-/* */
+/* =========================================================================
+   ТОКЕНЫ: цвета, шрифты, позиционирование
+   ========================================================================= */
+:root {
+  /* ---- Цвета ---- */
+  --color-page-bg: #ffffff;
+  --color-board-bg: #d8dbd3;
+  --color-board-border: #9aa3a8;
+
+  --color-screen-bg: #29002c;
+  --color-screen-border: #0d000f;
+  --color-screen-digit: #dd600d;
+
+  --color-label-bg: #b8bdb3;
+  --color-label-border: #0000008a;
+  --color-label-text: #000000;
+
+  --color-key-bg: #8a8b63;
+  --color-key-shadow: #444141;
+  --color-key-shadow-inset: rgba(136, 85, 85, 0.5);
+  --color-key-shadow-inset-active: rgba(129, 76, 76, 0.5);
+  --color-digit-key-bg: #e6e8d7;
+  --color-equals-bg: rgb(166, 47, 10);
+
+  --color-panel-border: #000000;
+  --color-panel-shadow: #9f9f9e;
+
+  --color-precision-btn: #000000;
+  --color-precision-btn-zero: #A8392F;
+  --color-precision-active-bg: #4a6a8f;
+
+  --color-switch-track: #303030;
+  --color-switch-border: #999999;
+  --color-switch-knob: #000000;
+
+  --color-register-text: #292121;
+
+  --color-instruction-bg: #4a6a8f;
+  --color-instruction-bg-hover: #5f7fa0;
+  --color-instruction-shadow-inset: rgba(10, 30, 99, 0.5);
+
+  /* ---- Шрифты (с безопасными запасными вариантами на случай,
+     если 'digital'/'gost' не загрузятся в конкретном браузере/ОС) ---- */
+  --font-digital: 'digital', 'Courier New', monospace;
+  --font-gost: 'gost', Arial, sans-serif;
+
+  /* =======================================================================
+     ПОЗИЦИОНИРОВАНИЕ ПЛАТЫ КАЛЬКУЛЯТОРА
+     -----------------------------------------------------------------------
+     Плата (.calc) имеет фиксированное соотношение сторон и тянется через
+     clamp() между --board-min-width и --board-max-width. Все дочерние
+     блоки внутри платы позиционируются В ПРОЦЕНТАХ от неё, поэтому вся
+     компоновка масштабируется как единое целое на любом экране — двигать
+     конкретный блок можно, меняя только его собственные переменные, это
+     не затронет остальные.
+     ======================================================================= */
+  --board-min-width: 320px;
+  --board-max-width: 825px;
+  --board-aspect: 825 / 700;
+  --board-border-width: 20px;
+
+  /* .top-svg — декоративная верхняя панель (в % от платы) */
+  --top-svg-top: 4.85%;
+  --top-svg-left: 0%;
+  --top-svg-width: 100%;
+  --top-svg-height: 30.3%;
+  --top-svg-scale-x: 1.112;
+  --top-svg-scale-y: 1.30;
+
+  /* .screen-section / .screen — блок экрана (в % от платы) */
+  --screen-top: 43.94%;
+  --screen-right: 8.03%;
+  --screen-width: 84.08%;
+  --screen-height: 7.58%;
+  --screen-scale: 1.15;
+
+  /* .calculator-title — табличка с названием модели (в % от платы) */
+  --title-top: 0.76%;
+  --title-left: 75.16%;
+  --title-width: 21.02%;
+  --title-height: 6.06%;
+  --title-scale: 0.85;
+
+  /* .keyboard — область клавиатуры целиком (в % от платы) */
+  --keyboard-top: 68.18%;
+  --keyboard-right: 7.64%;
+  --keyboard-width: 59.87%;
+  --keyboard-height: 27.27%;
+  --keyboard-scale: 1.1;
+
+  /* .precision — переключатель точности (в % от .keyboard) */
+  --precision-top: -4.44%;
+  --precision-left: -31.91%;
+  --precision-scale: 0.93;
+  --precision-width: 81px;
+  --precision-height: 180px;
+
+  /* .switch-row — тумблер включения (в % от .keyboard) */
+  --switch-top: 50%;
+  --switch-left: -52.51%;
+  --switch-rotate: 270deg;
+  --switch-scale: 1.5;
+
+  /* .memory_flags — панель регистров и флагов */
+  --memory-flags-basis: 370px;
+  --memory-flags-min: 220px;
+}
+
+/* =========================================================================
+   БАЗОВЫЕ СТИЛИ СТРАНИЦЫ
+   ========================================================================= */
 html {
   height: 100%;
-  width: 100%;
 }
 
 body {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  background-color: #ffffff;
+  background-color: var(--color-page-bg);
 }
 
-/* */
+img {
+  display: block;
+  max-width: none; /* .top-svg сознательно шире платы — декоративный "вылет" за края, как и в исходном макете */
+}
+
+/* =========================================================================
+   ОБЩАЯ СТРАНИЧНАЯ РАСКЛАДКА
+   -------------------------------------------------------------------------
+   .app — колонка на всю высоту страницы: кнопка инструкции сверху,
+   рабочая область (.workspace) ниже. Именно .workspace теперь отвечает
+   за центрирование и совместное размещение платы и панели регистров —
+   раньше это делалось абсолютным позиционированием и магическим
+   отрицательным отступом, что ломалось при любом изменении ширины окна.
+   ========================================================================= */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto; /* подстраховка на очень узких экранах вместо обрезания контента */
+}
+
+.workspace {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(8px, 2vw, 24px);
+  padding-top: 0;
+  padding-bottom: 0;
+  width: 100%;
+}
+
 .calculator {
+  display: flex;
+  justify-content: center;
+  flex: 0 1 auto;
+}
+
+/* =========================================================================
+   ОСНОВНАЯ ПЛАТА КАЛЬКУЛЯТОРА
+   ========================================================================= */
+.calc {
+  width: clamp(var(--board-min-width), 55vw, var(--board-max-width));
+  aspect-ratio: var(--board-aspect);
+  background-color: var(--color-board-bg);
+  border: var(--board-border-width) solid var(--color-board-border);
+  position: relative;
+}
+
+.calc_body {
+  position: relative;
   width: 100%;
   height: 100%;
-  display: block;
-  position: static;
-  align-items: center;
-  justify-content: center;
 }
 
-/* */
-.calc{
-  display: block flex;
-  position: static;
-  justify-content: center;
-  align-items: center;
-}
-
-/* */
-.calc_body{
-  display: block flex;
-  position: relative;
-  width: 50%;
-  height: 100%;
-  background-color: #d8dbd3;
-  box-sizing: border-box;
-  border: 20px solid #9aa3a8;
-}
-
+/* --------------------------- Декоративная верхняя панель --------------------------- */
 .top-svg {
-  display: block;
-  position: static;
-  width:100%;
-  height:auto;
+  position: absolute;
+  /* top: var(--top-svg-top); */
+  /* left: var(--top-svg-left); */
+  width: var(--top-svg-width);
+  height: var(--top-svg-height);
+  transform: scale(var(--top-svg-scale-x), var(--top-svg-scale-y));
+  transform-origin: top;
+  pointer-events: none;
 }
 
-/* */
+/* =========================================================================
+   ЭКРАН
+   ========================================================================= */
 .screen-section {
-  position: static;
+  z-index: 3;
+  top: var(--screen-top);
+  right: var(--screen-right);
+  width: var(--screen-width);
+  height: var(--screen-height);
+  position: absolute;
+  transform: scale(var(--screen-scale));
 }
 
-/* Сам экран */
 .screen {
-  background-color: #29002c;
-  border-top: solid 8px #0d000f;
-  border-right: solid 4px #0d000f;
-  border-left: solid 4px #0d000f;
-  border-bottom: solid 8px #0d000f;
+  background-color: var(--color-screen-bg);
+  border-top: solid 8px var(--color-screen-border);
+  border-right: solid 4px var(--color-screen-border);
+  border-left: solid 4px var(--color-screen-border);
+  border-bottom: solid 8px var(--color-screen-border);
   margin: auto;
   text-align: center;
 }
 
-/* Стиль для каждого символа на экране (цифры и точки) */
+/* Каждый символ на экране (цифры и точки).
+   display:inline-block вместо inline — иначе `width` ниже просто
+   игнорируется браузером, и разряды "плавают" по ширине шрифта. */
 .screen-item {
-  color: #dd600d;
+  color: var(--color-screen-digit);
   font-size: 50px;
-  font-family: digital;
-  display: inline;
+  font-family: var(--font-digital);
+  display: inline-block;
   width: 20px;
   text-align: right;
-  opacity: 0.15;
-  /* по умолчанию скрыты */
+  opacity: 0.15; /* по умолчанию "погашен", зажигается через JS */
   text-shadow: 0 0 1px rgba(87, 47, 47, 0.6);
 }
 
-/* Корректировка позиций точек (запятых) между разрядами */
+/* Точки (запятые) между разрядами */
 .dot {
   margin-left: -5px;
   margin-right: -10px;
 }
 
-/* Название модели – стилизованная табличка*/
+/* =========================================================================
+   ТАБЛИЧКА С НАЗВАНИЕМ МОДЕЛИ
+   ========================================================================= */
 .calculator-title {
-  position: relative;
-  display: block flex;
+  position: absolute;
+  display: flex;
   align-items: center;
   justify-content: center;
-  height: 42px;
+  top: var(--title-top);
+  left: var(--title-left);
+  width: var(--title-width);
+  height: var(--title-height);
   min-width: 0px;
-  background: #b8bdb3;
-  border: 2px solid #0000008a;
-  width: 120px;
-  z-index: 0;
+  transform: scale(var(--title-scale));
 }
 
 .calculator-title::before {
   content: "";
-  position: static;
+  position: absolute;
   inset: 0;
-
-  height:42px;
+  background: var(--color-label-bg);
+  border: 2px solid var(--color-label-border);
   z-index: 0;
 }
 
 #label {
-  position: static;
+  position: relative;
   z-index: 1;
   text-align: center;
-  color: #000000;
+  color: var(--color-label-text);
   text-transform: uppercase;
-  font-family: 'gost';
+  font-family: var(--font-gost);
   font-size: 24px;
   font-weight: bold;
-  border: solid 3px #000000;
-  background-color: #b8bdb3;
+  border: solid 3px var(--color-panel-border);
+  background-color: var(--color-label-bg);
   padding: 0 22px 0 22px;
+  white-space: nowrap;
 }
 
-
-/* Клавиатура – область с кнопками */
+/* =========================================================================
+   КЛАВИАТУРА — ОБЩАЯ ОБЛАСТЬ
+   ========================================================================= */
 .keyboard {
-  background-color: #d8dbd3;
-  position: relative;
+  top: var(--keyboard-top);
+  right: var(--keyboard-right);
+  width: var(--keyboard-width);
+  height: var(--keyboard-height);
+  background-color: var(--color-board-bg);
+  position: absolute;
+  transform: scale(var(--keyboard-scale));
 }
 
+/* --------------------------- Переключатель включения --------------------------- */
+.switch-row {
+  top: var(--switch-top);
+  left: var(--switch-left);
+  transform: rotate(var(--switch-rotate)) scale(var(--switch-scale));
+  display: flex;
+  position: absolute;
+  align-items: center;
+}
+
+.onoffswitch {
+  float: left;
+  box-shadow: 0px 1px 1px 1px var(--color-key-shadow),
+    inset -2px -1px 10px 1px var(--color-key-shadow-inset);
+  position: relative;
+  width: 51px;
+}
+
+.onoffswitch-checkbox {
+  /* Спрятан визуально, но не через display:none — так переключатель
+     остаётся доступен с клавиатуры и для скринридеров */
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.onoffswitch-label {
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid var(--color-switch-border);
+}
+
+.onoffswitch-inner {
+  display: block;
+  width: 200%;
+  margin-left: -100%;
+  transition: margin 0.3s ease-in 0s;
+}
+
+.onoffswitch-inner::before,
+.onoffswitch-inner::after {
+  display: block;
+  float: left;
+  width: 50%;
+  height: 14px;
+  padding: 0;
+  line-height: 14px;
+  font-size: 10px;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.onoffswitch-inner::before {
+  content: " ";
+  padding-left: 5px;
+  background-color: var(--color-switch-track);
+}
+
+.onoffswitch-inner::after {
+  content: " ";
+  padding-right: 5px;
+  background-color: var(--color-switch-track);
+  text-align: right;
+}
+
+.onoffswitch-switch {
+  display: block;
+  width: 6px;
+  margin: 4px;
+  background: var(--color-switch-knob);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 33px;
+  border: 2px solid var(--color-switch-border);
+  transition: all 0.3s ease-in 0s;
+}
+
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+  margin-left: 0;
+}
+
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+  right: 0px;
+}
+
+.onoffswitch-checkbox:focus-visible + .onoffswitch-label {
+  outline: 2px solid var(--color-precision-active-bg);
+  outline-offset: 2px;
+}
+
+/* --------------------------- Переключатель точности --------------------------- */
 .precision {
   display: flex;
-  position: relative;
-  border: 0.5px#000 solid !important;
-  box-shadow: 0px 0px 2px 3px #9f9f9e;
+  position: absolute;
+  /* Раньше: position:absolute без top/left + transform:translate(-150px,-8px) —
+     итоговое положение зависело от "точки покоя" (static position),
+     вычисляемой браузером неявно. Значения эквивалентны, но заданы явно. */
+  top: var(--precision-top);
+  left: var(--precision-left);
+  transform: scale(var(--precision-scale));
+  border: 1px #000 solid;
+  box-shadow: 0px 0px 2px 3px var(--color-panel-shadow);
   border-radius: 5%;
-  width: 81px;
-  height: 180px;
+  width: var(--precision-width);
+  height: var(--precision-height);
   padding: 5px 5px 5px 10px;
-  /* top, right, bottom , left*/
 }
 
-/* Переключатель точности*/
 .precision-row {
   display: grid;
-  grid-template-columns: 1;
+  grid-template-columns: none;
   position: static;
   margin-bottom: 160px;
   align-items: center;
   gap: 12px;
   color: #333;
+  transform: scale(1, 0.6);
 }
 
-/* Кнопки точности*/
 .precision-button {
   height: 30px;
   width: 35px;
@@ -166,79 +440,64 @@ body {
   cursor: pointer;
   transition: 0.05s linear;
   text-align: center;
-  background-color: #000;
+  background-color: var(--color-precision-btn);
 }
 
 .precision-button[data-precision="0"] {
-  background-color: #A8392F !important;
+  background-color: var(--color-precision-btn-zero);
 }
 
 .precision-row-labels {
+  transform: translateY(-10.2px);
   height: auto;
   width: 40px;
   display: grid;
   position: static;
-  font-family: gost;
+  font-family: var(--font-gost);
   font-weight: bold;
   text-align: right;
-  font-size: 15px !important;
-  min-height: 0px !important;
+  font-size: 15px;
+  min-height: 0px;
 }
 
 .precision-row-labels p {
-  border-bottom: 2px #000000;
-  border-bottom-style: solid;
+  margin: 0;
+  border-bottom: 2px solid #000000;
 }
 
-.precision-row-labels p[value="13"] {
-  margin-top: -9px;
-}
-
-.precision-row-labels p[value="11"] {
-  margin-top: -7.6px;
-}
-
-.precision-row-labels p[value="9"] {
-  margin-top: -8.5px;
-}
-
-.precision-row-labels p[value="7"] {
-  margin-top: -8px;
-}
-
-.precision-row-labels p[value="5"] {
-  margin-top: -8px;
-}
-
-.precision-row-labels p[value="3"] {
-  margin-top: -8px;
-}
+.precision-row-labels p[data-value="13"] { margin-top: -9px; }
+.precision-row-labels p[data-value="11"] { margin-top: -7.6px; }
+.precision-row-labels p[data-value="9"]  { margin-top: -8.5px; }
+.precision-row-labels p[data-value="7"]  { margin-top: -8px; }
+.precision-row-labels p[data-value="5"]  { margin-top: -8px; }
+.precision-row-labels p[data-value="3"]  { margin-top: -8px; }
 
 .precision-button:active {
   transform: translateY(2px);
-  box-shadow: 0px 1px 0 0 #514d4d,
+  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
     inset -1px -1px 3px 0px rgba(0, 0, 0, 0.3);
 }
 
 .precision-button.active {
-  background-color: #4a6a8f;
+  background-color: var(--color-precision-active-bg);
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
-/*Контейнер для всех клавиш*/
+/* --------------------------- Контейнер всех клавиш --------------------------- */
 .keys {
   display: flex;
+  transform: translateX(-20px);
   gap: 35px;
 }
 
-/*Первая панель, клавиши памяти*/
+/* Панель клавиш памяти */
 .keys-memory {
   display: grid;
   gap: 2px 2px;
   grid-template-columns: 40px 40px;
-  background-color: #000000;
-  border: 1px#000 solid !important;
-  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  background-color: var(--color-panel-border);
+  border: 1px solid #000;
+  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
   border-radius: 2%;
   font-size: 22px;
 }
@@ -250,42 +509,39 @@ body {
   width: 25px;
   height: 25px;
   border: 3px solid #000000;
-  /* цвет обводки */
   border-radius: 50%;
-  /* делаем круг */
   font-size: 20px;
 }
 
-/*Вторая панель, клавиши цифр и точка*/
+/* Панель клавиш цифр и точки */
 .digits {
   display: grid;
   grid-template-columns: 40px 40px 40px;
   gap: 2px 2px;
-  background-color: #000000;
+  background-color: var(--color-panel-border);
   min-width: 0;
-  border: 0.5px#000 solid !important;
-  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  border: 1px solid #000;
+  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
   border-radius: 2%;
 }
 
 .digits button {
-  background-color: #e6e8d7 !important;
+  background-color: var(--color-digit-key-bg);
 }
 
 .digits button[value="0"] {
   grid-column: span 2;
 }
 
-/*Третья панель, стандартные операции + обратное деление, смена знака, степень*/
+/* Панель операций (+ обратное деление, смена знака, степень) */
 .operations {
   display: grid;
-  /* transform: translateX(60px); */
   grid-template-columns: 40px 40px 40px;
   grid-auto-rows: 40px;
   gap: 2px 2px;
-  background-color: #000000;
-  border: 0.5px#000 solid !important;
-  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  background-color: var(--color-panel-border);
+  border: 1px solid #000;
+  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
   border-radius: 2%;
 }
 
@@ -302,160 +558,93 @@ body {
 }
 
 .operations button[value="="] {
-  background-color: rgb(166, 47, 10) !important;
+  background-color: var(--color-equals-bg);
   grid-column: span 2;
   font-weight: bold;
 }
 
 .operations button[value="/-/"] {
-  font-size: 17px !important;
+  font-size: 17px;
 }
 
+/* Панель доп. функций (печать, целая часть, скобки) */
 .additional {
   display: grid;
   gap: 2px 2px;
-  font-family: gost;
-  background-color: #000000;
-  border: 0.5px#000 solid !important;
-  box-shadow: 0px 0px 2px 4px #9f9f9e;
+  font-family: var(--font-gost);
+  background-color: var(--color-panel-border);
+  border: 1px solid #000;
+  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
   border-radius: 2%;
 }
 
-/* Общий стиль для всех кнопок */
-.calc_body button {
+/* --------------------------- Общий стиль всех кнопок ---------------------------
+   Раньше селектор был "#myCalc button" — элемента с id="myCalc" в разметке
+   нет вообще, поэтому ни одно из этих правил не применялось. Заменено на
+   ".calc button", реально соответствующее корневому блоку платы. */
+.calc button {
   display: inline-block;
   height: auto;
   width: auto;
-  font-family: 'gost';
+  font-family: var(--font-gost);
   font-size: 22px;
   color: #000000;
-  background-color: #8a8b63;
+  background-color: var(--color-key-bg);
   border: none;
   outline: none;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   text-align: center;
-  box-shadow: 0px 1px 1px 1px #444141,
-    inset -1px -1px 8px 1px rgba(136, 85, 85, 0.5);
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: 0px 1px 1px 1px var(--color-key-shadow),
+    inset -1px -1px 8px 1px var(--color-key-shadow-inset);
   transition: 0.05s linear;
 }
 
-/* Эффект нажатия – кнопка чуть утапливается */
-#myCalc button:active {
+.calc button:active {
   transform: translateY(1px);
-  box-shadow: 0px 1px 0 0 #514d4d,
-    inset -2px -1px 5px 0px rgba(129, 76, 76, 0.5);
+  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
+    inset -2px -1px 5px 0px var(--color-key-shadow-inset-active);
 }
 
-/*Переключатель включения*/
-.switch-row {
-  display: flex;
-  position: relative;
-  align-items: center;
+.calc button:focus-visible {
+  outline: 2px solid var(--color-precision-active-bg);
+  outline-offset: 1px;
 }
 
-/* Стилизация выключателя (on/off switch) */
-.onoffswitch {
-  float: left;
-  box-shadow: 0px 1px 1px 1px #444141,
-    inset -2px -1px 10px 1px rgba(129, 76, 76, 0.5);
-  position: relative;
-  width: 51px;
-}
-
-.onoffswitch-checkbox {
-  display: none;
-}
-
-.onoffswitch-label {
-  display: block;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid #999999;
-}
-
-.onoffswitch-inner {
-  display: block;
-  width: 200%;
-  margin-left: -100%;
-  transition: margin 0.3s ease-in 0s;
-}
-
-.onoffswitch-inner:before,
-.onoffswitch-inner:after {
-  display: block;
-  float: left;
-  width: 50%;
-  height: 14px;
-  padding: 0;
-  line-height: 14px;
-  font-size: 10px;
-  color: white;
-  box-sizing: border-box;
-}
-
-.onoffswitch-inner:before {
-  content: " ";
-  padding-left: 5px;
-  background-color: #303030;
-  color: #ffffff;
-}
-
-.onoffswitch-inner:after {
-  content: " ";
-  padding-right: 5px;
-  background-color: #303030;
-  color: #ffffff;
-  text-align: right;
-}
-
-.onoffswitch-switch {
-  display: block;
-  width: 6px;
-  margin: 4px;
-  background: #000000;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 33px;
-  border: 2px solid #999999;
-  transition: all 0.3s ease-in 0s;
-}
-
-.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-inner {
-  margin-left: 0;
-}
-
-.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-switch {
-  right: 0px;
-}
-
-/* Блок регистров и флагов – отображается справа */
+/* =========================================================================
+   ПАНЕЛЬ РЕГИСТРОВ И ФЛАГОВ
+   -------------------------------------------------------------------------
+   Раньше позиционировалась через position:absolute без позиционированного
+   предка, из-за чего "плавала" относительно всей страницы и требовала
+   компенсирующего отрицательного сдвига платы (--body-offset-x). Теперь
+   это обычный flex-элемент внутри .workspace — сам встаёт рядом с платой
+   и переносится под неё на узких экранах (см. медиа-запрос ниже). */
 .memory_flags {
   display: grid;
-  position: relative;
-  align-items: left;
-  width: 370px;
+  align-items: start;
+  flex: 1 1 var(--memory-flags-basis);
+  max-width: var(--memory-flags-basis);
+  min-width: var(--memory-flags-min);
   height: fit-content;
   gap: 10px;
-  border: 3px#000000;
-  border-style: solid;
+  border: 3px solid #000000;
 
-  font-family: digital;
-  font-size: 32px;
-  color: #292121;
+  font-family: var(--font-digital);
+  font-size: clamp(20px, 2.2vw, 32px);
+  color: var(--color-register-text);
 }
 
 .memory {
   display: grid;
-  flex-direction: column;
   gap: 15px;
   padding-left: 10px;
   padding-top: 10px;
   min-height: 0px;
   height: fit-content;
-  width:fit-content;
+  width: fit-content;
 }
 
 .register {
@@ -472,6 +661,7 @@ body {
 
 .register-display {
   width: 248px;
+  max-width: 100%;
   height: fit-content;
 }
 
@@ -483,34 +673,74 @@ body {
 
 .flags {
   display: grid;
-  flex-direction: column;
   padding-left: 10px;
   padding-bottom: 10px;
   gap: 10px;
 }
 
-.instruction-button {
-  position: relative;
-  background-color: #4a6a8f;
-  color: #fff;
-  border: none;
-  padding: 2px;
-  font-size: 18px;
-  font-family: gost;
-  cursor: pointer;
-  box-shadow: 0px 3px 1px 1px #444141,
-    inset -2px -1px 10px 1px rgba(10, 30, 99, 0.5);
-  transition: 0.05s linear;
-  padding: 10px 12px 10px 10px;
-  /* top, right, bottom , left*/
-  height: 74px;
+/* =========================================================================
+   КНОПКА "ИНСТРУКЦИЯ"
+   ========================================================================= */
+
+.instruction{
+  box-sizing: border-box;
+  width: fit-content;
+  min-height:0;
+  height:80px;
+  position: relative; 
+  top:43dvb;
 }
 
-.instruction-button:hover {
-  background-color: #5f7fa0;
+#instruction-button {
+  position: relative;
+  background-color: var(--color-instruction-bg);
+  color: #fff;
+  border: none;
+  padding: 10px 12px 10px 10px;
+  font-size: 18px;
+  font-family: var(--font-gost);
+  cursor: pointer;
+  box-shadow: 0px 3px 1px 1px var(--color-key-shadow),
+    inset -2px -1px 10px 1px var(--color-instruction-shadow-inset);
+  transition: 0.05s linear;
+  height: 80px;
 }
-.instruction-button:active {
+
+#instruction-button:hover {
+  background-color: var(--color-instruction-bg-hover);
+}
+
+#instruction-button:active {
   transform: translateY(2px);
-  box-shadow: 0px 1px 0 0 #514d4d,
-    inset -2px -1px 5px 0px rgba(10, 30, 99, 0.5);
+  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
+    inset -2px -1px 5px 0px var(--color-instruction-shadow-inset);
+}
+
+#instruction-button:focus-visible {
+  outline: 2px solid var(--color-instruction-bg-hover);
+  outline-offset: 2px;
+}
+
+/* =========================================================================
+   АДАПТИВНОСТЬ ДЛЯ УЗКИХ ЭКРАНОВ
+   -------------------------------------------------------------------------
+   На небольших диагоналях панель регистров переносится под плату
+   калькулятора, а гигантский верхний отступ кнопки "Инструкция"
+   (рассчитанный под десктопный макет) уменьшается — иначе он занимал
+   бы половину экрана телефона впустую.
+   ========================================================================= */
+@media (max-width: 760px) {
+  .workspace {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .memory_flags {
+    max-width: min(var(--memory-flags-basis), 92vw);
+    width: 100%;
+  }
+
+  .calc {
+    width: clamp(var(--board-min-width), 92vw, var(--board-max-width));
+  }
 }
