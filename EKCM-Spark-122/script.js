@@ -110,6 +110,7 @@ function createCalculator() {
     };
 
     dom.keyboard = document.querySelector('.keyboard');
+    dom.precisionButtons = Array.from(document.querySelectorAll('.precision-button'));
 
     // Раньше вызывались через инлайновые onclick в HTML; атрибуты убраны
     // из разметки (нестабильны при CSP, не единообразны с остальным
@@ -157,15 +158,15 @@ function createCalculator() {
   function onKeyboardClick(event) {
     const button = event.target.closest('button');
     if (!button || !dom.keyboard.contains(button)) return;
-    if (!state.powered) return; // выключенный калькулятор не реагирует на клавиши
 
+    // Переключатель точности — механический, работает независимо от питания
     if (button.classList.contains('precision-button')) {
-      handlePrecision(button.dataset.precision);
+      handlePrecision(button);
       return;
     }
 
-    // Кнопки "A1".."A5" и "3"/"2" в панели памяти обрабатываются отдельно,
-    // чтобы не путать их с одноимёнными цифрами основной панели
+    if (!state.powered) return; // остальная клавиатура без питания не реагирует
+
     if (button.classList.contains('memory-button')) {
       handleMemoryKey(button.value);
       return;
@@ -329,11 +330,22 @@ function createCalculator() {
     renderDisplay();
   }
 
-  function handlePrecision(precision) {
-    state.precision = parseInt(precision, 10) || 0;
+  function handlePrecision(button) {
+    const precision = button.dataset.precision;
+    const wasActive = button.classList.contains('active');
+
+    // Снимаем "прожатость" со всех кнопок точности — активна максимум одна
+    dom.precisionButtons.forEach((btn) => btn.classList.remove('active'));
+
+    if (wasActive) {
+      // Повторный клик по уже активной кнопке — сбрасываем точность к "B" (0)
+      state.precision = 0;
+    } else {
+      button.classList.add('active');
+      state.precision = parseInt(precision, 10) || 0;
+    }
+
     updateFlag('precision', state.precision);
-    // Само значение на экране этим не пересчитываем - точность влияет
-    // только на результаты последующих вычислений (это переключатель режима)
   }
 
   // ---------- Ввод числа ----------
@@ -839,7 +851,7 @@ function createCalculator() {
   // Дежурная строка регистра, в который ещё ни разу не клали значение - 16
   // одинаково приглушённых нулей, без знака (показывать нечего)
   function appendIdleRegisterRow(container, opacity) {
-    const row = document.createElement('p');
+    const row = document.createElement('span');
     row.className = 'register-digit';
     for (let i = 0; i < MAX_DIGITS; i++) {
       const digitSpan = document.createElement('span');
@@ -859,13 +871,14 @@ function createCalculator() {
     const digitsSequence = intPart.padEnd(MAX_DIGITS, '0').slice(0, MAX_DIGITS);
     const activeLength = Math.min(intPart.length, MAX_DIGITS);
 
-    const row = document.createElement('p');
+    const row = document.createElement('span');
     row.className = 'register-digit';
 
     const signSpan = document.createElement('span');
     signSpan.className = 'register-sign';
     signSpan.textContent = negative ? '-' : '';
     signSpan.style.opacity = negative ? activeOpacity : OPACITY_IDLE;
+    if (negative) row.style.paddingLeft = 0;
     row.appendChild(signSpan);
 
     for (let i = 0; i < MAX_DIGITS; i++) {
