@@ -139,7 +139,7 @@
               <div class="additional">
                 <!-- onclick убран, id добавлен: обработчик печати теперь
                       вешается в script.js (см. dom.printButton). -->
-                <button type="button" id="print-button" class="big-button" value="()" aria-label="Печать">ˆ</button>
+                <button type="button" class="big-button" value="()" aria-label="Печать регистра клавиатуры">ˆ</button><!-- Печать -->
                 <button type="button" class="big-button" value="ВЦ" aria-label="Выделение целой части">/</button>
                 <button type="button" class="math-button" value=")">)</button>
                 <button type="button" class="math-button" value="(">(</button>
@@ -180,6 +180,11 @@
             </div>
             <div class="register" id="register_A5">
               <label>A5 =</label>
+              <div class="register-display"><span class="register-digit">0</span></div>
+              <span class="register-count"></span>
+            </div>
+            <div class="register" id="register_KL">
+              <label>KB =</label>
               <div class="register-display"><span class="register-digit">0</span></div>
               <span class="register-count"></span>
             </div>

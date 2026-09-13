@@ -53,8 +53,8 @@
   --color-precision-btn: #000000;
   --color-precision-btn-zero: #A8392F;
 
-  --color-switch-track: #525252;
-  --color-switch-border: #525252;
+  --color-switch-track: #6b7073;
+  --color-switch-border: #9aa3a8;
   --color-switch-knob: #dbebed;
 
   --color-register-text: #292121;
@@ -573,7 +573,7 @@ img {
   position: relative;
   justify-content: center;
   margin: 0;
-  width: fit-content;
+  width: auto;
   top:180px;
 }
 
@@ -590,6 +590,11 @@ img {
   font-family: var(--font-digital);
   font-size: clamp(20px, 2.2vw, 32px);
   color: var(--color-register-text);
+
+  /* Этот размер - "потолок": именно им пользуются флаги (OP/OF/PF).
+     Для строки регистра он используется как значение по умолчанию, пока
+     JS ещё не посчитал --register-font-size (см. fitRegisterFontSize) */
+  --register-font-size: clamp(20px, 2.2vw, 32px);
 }
 
 .memory {
@@ -601,31 +606,29 @@ img {
   height: fit-content;
   width: fit-content;
 }
-
 .register {
   display: flex;
   height: auto;
   min-height: 0px;
   align-content: center;
 }
-
 .register label {
   width: fit-content;
   height: fit-content;
 }
-
 .register-display {
   width: 248px;
   max-width: 100%;
   height: fit-content;
+  overflow: hidden;      /* страховка на случай, если JS ещё не отработал */
 }
-
 .register-digit {
   margin: 0 0;
   padding-left: 14.55px;
   height: 32px;
+  font-size: var(--register-font-size);
+  white-space: nowrap;   /* не даём 18 символам перенестись на вторую строку */
 }
-
 .flags {
   display: grid;
   padding-left: 10px;

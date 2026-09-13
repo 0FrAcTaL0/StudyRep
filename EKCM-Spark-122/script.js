@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * Калькулятор "Искра-122".
  *
@@ -9,23 +10,40 @@
  *      0.15 - калькулятор выключен (дежурная засветка);
  *      0.75 - включён, но разряд ещё не содержит введённого значения (нули-заглушки);
  *      1    - разряд, реально входящий в текущее введённое/вычисленное число.
+ *    Число выводится начиная с левого края табло.
  *  - ввод цифр и десятичной точки
  *  - смена знака (/-/)
  *  - сброс (СК)
- *  - арифметика
- *  - индикация переполнения
+ *  - арифметика: +, -, *, /
+ *  - индикация переполнения (флаг OF)
  *  - регистры A1-A5: каждый - просто число (или null, пока не задано).
  *    Кнопка A1..A5 - сохранить/загрузить/обменять текущее значение с
  *    регистром (см. pressRegisterButton); кнопки "2"/"3" - прибавляют
  *    текущее значение с экрана к A2/A3 соответственно (см. addToRegister).
+ *    Занесение в регистр по кнопке A1..A5 может выполняться "с удалением
+ *    источника" (после сохранения экран возвращается к дежурному "0") или
+ *    "без удаления" (значение просто копируется, экран не трогается) -
+ *    режим переключается константой MEMORY_STORE_DELETES_SOURCE.
+ *  - регистр клавиатуры (Кл, state.keyboardBuffer): отдельно от A1-A5,
+ *    хранит последнее значение, набранное непосредственно с клавиатуры
+ *    (цифрами/точкой/сменой знака) - в отличие от A1-A5 сбрасывается при
+ *    СК/включении, как и сам экран. Кнопка "Печать" выводит его на экран,
+ *    не изменяя сам буфер (см. printKeyboardBuffer). Отображается в общем
+ *    сегменте регистров вместе с A1-A5.
  *  - если A1 задан (не null) и второй операнд не введён явно (сразу "оператор" + "="),
- *    он берётся из A1 (сам регистр не меняется, см. calculateResult)
- *  - обратное деление (1/x), квадратный корень, выделение целой части (без
- *    округления) - как немедленные унарные операции над текущим числом
+ *    он берётся из A1 (сам регистр не меняется, см. calculateResult) - это
+ *    касается всех бинарных операций, включая обратное деление
+ *  - обратное деление (ģ) - полноценная бинарная операция (как +, -, *, /),
+ *    меняющая операнды местами: результат = второй операнд / первый
+ *    (а не 1/x, как раньше). Если второй операнд не введён явно, он, как и
+ *    для остальных операций, берётся из A1. Квадратный корень, выделение
+ *    целой части - по-прежнему немедленные унарные операции над текущим
+ *    числом.
  *  - возведение в степень: n нажатий кнопки степени подряд = число в степени
  *    n+1 (степень считается от исходного числа, не от промежуточного результата)
  *  - точность вычислений (кнопки "B"/13/11/9/7/5/3): ограничивает количество
  *    значащих десятичных разрядов результата вычислений (см. applyPrecisionLimit).
+ *    "B" (0) - без ограничения
  *  - скобки "(" / ")": приоритет операций реализован через стек контекстов
  *    вычислений (см. state.contextStack). Каждая "(" открывает новый контекст,
  *    каждая ")" закрывает текущий, считает его двухпроходным алгоритмом
@@ -46,6 +64,17 @@ function createCalculator() {
   const OPACITY_IDLE = '0.5';  // включён, но разряд - незаполненный ноль-заглушка
   const OPACITY_ACTIVE = '1';   // разряд входит в реально введённое/вычисленное число
 
+  // Режим занесения текущего значения в регистр памяти кнопкой A1..A5
+  // (см. pressRegisterButton):
+  //  true  - "с удалением": значение ПЕРЕНОСИТСЯ в регистр, а экран после
+  //          этого возвращается к дежурному "0" (источник очищается);
+  //  false - "без удаления" (старое поведение): значение просто копируется
+  //          в регистр, а на экране остаётся как было.
+  // Свап уже занятого регистра (когда на экране есть активное значение) в
+  // обоих режимах всё равно замещает экран старым содержимым регистра -
+  // флаг влияет на случай, когда сохраняем в ещё пустой регистр.
+  const MEMORY_STORE_DELETES_SOURCE = true;
+
   // ---------- Состояние ----------
   const state = {
     powered: false,
@@ -64,12 +93,17 @@ function createCalculator() {
     operandPending: false,
     waitingForNewEntry: false,// true сразу после выбора операции или после "="
     overflow: false,
-    hasValue: false,          // true, если на табло реально введённое/вычисленное число
+    hasValue: false,          // true, если на табло реально введённое/вычисленное число, а не дежурный "0"
     // Каждый регистр - просто число (или null, если в него ещё ни разу не
     // клали значение). Кнопки "2"/"3" прибавляют текущее значение с экрана
     // к A2/A3 соответственно; A1/A4/A5 хранят/меняют одно значение целиком
     // (см. pressRegisterButton).
     memory: { A1: null, A2: null, A3: null, A4: null, A5: null },
+    // Регистр клавиатуры: последнее значение, набранное непосредственно с
+    // клавиатуры (цифрами/точкой/сменой знака) - см. верхний doc-комментарий.
+    // null, пока ничего не набирали. В отличие от memory, сбрасывается в
+    // resetState() (не "энергонезависимый").
+    keyboardBuffer: null,
     // Цепочка последовательных нажатий кнопки степени (**): null, если цепочка
     // не активна; { base, exponent } - если предыдущим действием было именно
     // нажатие степени (см. resetPowerChain/powerButtonPressed)
@@ -96,7 +130,7 @@ function createCalculator() {
     dom.dotEls = Array.from(document.querySelectorAll('.screen .dot'));
 
     dom.registers = {};
-    ['A1', 'A2', 'A3', 'A4', 'A5'].forEach((key) => {
+    ['A1', 'A2', 'A3', 'A4', 'A5', 'KL'].forEach((key) => {
       const root = document.getElementById(`register_${key}`);
       dom.registers[key] = {
         display: root ? root.querySelector('.register-display') : null, // сюда рендерится строка со значением регистра
@@ -109,14 +143,10 @@ function createCalculator() {
       precision: document.getElementById('flag_precision'), // текущая точность вычислений (0/13/11/9/7/5/3)
     };
 
+    dom.memoryFlags = document.querySelector('.memory_flags');
+
     dom.keyboard = document.querySelector('.keyboard');
     dom.precisionButtons = Array.from(document.querySelectorAll('.precision-button'));
-
-    // Раньше вызывались через инлайновые onclick в HTML; атрибуты убраны
-    // из разметки (нестабильны при CSP, не единообразны с остальным
-    // кодом) — обработчики теперь навешиваются здесь, см. bindEvents().
-    dom.instructionButton = document.getElementById('instruction-button');
-    dom.printButton = document.getElementById('print-button');
   }
 
   // ---------- Инициализация ----------
@@ -124,6 +154,14 @@ function createCalculator() {
     cacheDom();
     bindEvents();
     renderPoweredOff(); // при загрузке страницы калькулятор считается выключенным
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(fitRegisterFontSize);
+    } else {
+      fitRegisterFontSize();
+    }
+
+    window.addEventListener('resize', debounce(fitRegisterFontSize, 150));
   }
 
   function bindEvents() {
@@ -137,36 +175,21 @@ function createCalculator() {
 
     // Один обработчик на всю клавиатуру вместо слушателя на каждую кнопку
     dom.keyboard.addEventListener('click', onKeyboardClick);
-
-    if (dom.instructionButton) {
-      dom.instructionButton.addEventListener('click', () => {
-        window.open('./instr.html', '_blank');
-      });
-    }
-
-    // Кнопка печати физически находится внутри .keyboard, поэтому клик по
-    // ней также пройдёт через onKeyboardClick (там для value="()" нет
-    // отдельного case — сработает лишь диагностический console.log в
-    // default-ветке handleKey, как и раньше). Печать запускаем отдельно.
-    if (dom.printButton) {
-      dom.printButton.addEventListener('click', () => {
-        window.print();
-      });
-    }
   }
 
   function onKeyboardClick(event) {
     const button = event.target.closest('button');
     if (!button || !dom.keyboard.contains(button)) return;
 
-    // Переключатель точности — механический, работает независимо от питания
     if (button.classList.contains('precision-button')) {
       handlePrecision(button);
       return;
     }
 
-    if (!state.powered) return; // остальная клавиатура без питания не реагирует
+    if (!state.powered) return; // выключенный калькулятор не реагирует на клавиши
 
+    // Кнопки "A1".."A5" и "3"/"2" в панели памяти обрабатываются отдельно,
+    // чтобы не путать их с одноимёнными цифрами основной панели
     if (button.classList.contains('memory-button')) {
       handleMemoryKey(button.value);
       return;
@@ -190,7 +213,6 @@ function createCalculator() {
     state.powered = false;
     renderPoweredOff();
     updateFlag('precision', 0);
-    resetRegisters();
   }
 
   function resetState() {
@@ -201,6 +223,7 @@ function createCalculator() {
     state.overflow = false;
     state.hasValue = false;
     state.powerChain = null;
+    state.keyboardBuffer = null; // буфер клавиатуры - часть "экрана", сбрасывается вместе с ним
     // Точность вычислений (кнопки "B"/13/11/9/7/5/3) НЕ сбрасываем при СК или
     // включении - это как физический переключатель, который остаётся в своём
     // положении, пока его не переставят вручную
@@ -235,13 +258,11 @@ function createCalculator() {
       case '-':
       case '*':
       case '/':
+      case 'invdiv': // обратное деление: бинарная операция, меняющая операнды местами (см. applyOperator)
         setOperator(value);
         break;
       case '=':
         calculateResult();
-        break;
-      case 'invdiv': // обратное деление: 1 / текущее число
-        invertValue();
         break;
       case '√': // квадратный корень
         sqrtValue();
@@ -251,6 +272,9 @@ function createCalculator() {
         break;
       case 'ВЦ': // выделение целой части (отбрасываем дробную часть, без округления)
         integerPart();
+        break;
+      case '()': // «Печать»: вывести на экран значение регистра клавиатуры (буфера)
+        printKeyboardBuffer();
         break;
       case '(':
         updateFlag('operation', value);
@@ -302,18 +326,37 @@ function createCalculator() {
 
     if (stored === null) {
       state.memory[name] = parseFloat(state.currentValue);
+      // Регистр был пуст - действительно занесение "с чистого листа": если
+      // включён режим переноса с удалением, источник (экран) очищается
+      if (MEMORY_STORE_DELETES_SOURCE) clearCurrentValueToIdle();
       renderRegisters();
       return;
     }
+
     if (state.hasValue) {
-      const value = parseFloat(state.currentValue);
-      state.memory[name] = value;
-      recallValue(value);
+      // Регистр уже занят - это обмен: текущее значение уходит в регистр, а
+      // то, что там лежало, выходит на экран. Экран в любом случае получает
+      // новое (старое регистровое) значение, так что режим удаления здесь
+      // ничего дополнительно не меняет - предыдущее содержимое экрана уже
+      // не остаётся на месте ни в одном из режимов
+      state.memory[name] = parseFloat(state.currentValue);
+      recallValue(stored);
     } else {
       recallValue(stored);
-      state.memory[name]=null;
+      state.memory[name] = null;
     }
     renderRegisters();
+  }
+
+  // Возвращает экран к дежурному состоянию ("0", без активного введённого
+  // значения) - используется при занесении в регистр памяти "с удалением
+  // источника" (см. MEMORY_STORE_DELETES_SOURCE)
+  function clearCurrentValueToIdle() {
+    state.currentValue = '0';
+    state.hasValue = false;
+    state.waitingForNewEntry = false;
+    state.operandPending = false;
+    renderDisplay();
   }
 
   function addToRegister(name) {
@@ -367,6 +410,7 @@ function createCalculator() {
     }
     state.hasValue = true;
     state.operandPending = false;
+    updateKeyboardBuffer();
     renderDisplay();
   }
 
@@ -381,6 +425,7 @@ function createCalculator() {
     }
     state.hasValue = true;
     state.operandPending = false;
+    updateKeyboardBuffer();
     renderDisplay();
   }
 
@@ -392,12 +437,23 @@ function createCalculator() {
     } else if (state.currentValue !== '0') {
       state.currentValue = '-' + state.currentValue;
     }
+    updateKeyboardBuffer();
     renderDisplay();
+  }
+
+  // Фиксирует в регистре клавиатуры то, что реально набрано вручную (цифрами/
+  // точкой/сменой знака) - см. state.keyboardBuffer и doc-комментарий вверху
+  // файла. Регистры/расчёты currentValue не трогают, поэтому вызывается
+  // только из inputDigit/inputDot/toggleSign
+  function updateKeyboardBuffer() {
+    state.keyboardBuffer = parseFloat(state.currentValue);
+    renderRegisters();
   }
 
   function clearAll() {
     resetState();
     renderDisplay();
+    renderRegisters();
     resetFlags();
     dom.digitEls[0].style.opacity = OPACITY_ACTIVE;
   }
@@ -443,7 +499,7 @@ function createCalculator() {
 
   // Если у текущего (самого вложенного) контекста есть оператор, ожидающий
   // операнд, а новый операнд так и не появился - "доразрешаем" его прямо
-  // сейчас: недостающий операнд берётся через getCurrentTermValue (то есть 
+  // сейчас: недостающий операнд берётся через getCurrentTermValue (то есть
   // из A1, если ничего не вводили), контекст сворачивается до одного
   // промежуточного числа на том же уровне вложенности (сама скобка не
   // закрывается), и это число становится текущим отображаемым значением.
@@ -477,9 +533,9 @@ function createCalculator() {
     const numbers = ctx.numbers.slice();
     const operators = ctx.operators.slice();
 
-    // Проход 1: умножение и деление
+    // Проход 1: умножение, деление и обратное деление (тот же приоритет)
     for (let i = 0; i < operators.length; ) {
-      if (operators[i] === '*' || operators[i] === '/') {
+      if (operators[i] === '*' || operators[i] === '/' || operators[i] === 'invdiv') {
         const result = applyOperator(numbers[i], numbers[i + 1], operators[i]);
         if (state.overflow) return null;
         numbers.splice(i, 2, result);
@@ -647,6 +703,13 @@ function createCalculator() {
         }
         result = a / b;
         break;
+      case 'invdiv': // обратное деление: операнды меняются местами - результат = b / a
+        if (a === 0) {
+          triggerOverflow();
+          return 0;
+        }
+        result = b / a;
+        break;
       default:
         result = b;
     }
@@ -681,18 +744,14 @@ function createCalculator() {
     renderDisplay();
   }
 
-  // Обратное деление: результат = 1 / текущее число
-  function invertValue() {
+  // «Печать»: выводит на экран значение регистра клавиатуры - последнее
+  // значение, набранное непосредственно с клавиатуры (см. state.keyboardBuffer
+  // и inputDigit/inputDot/toggleSign). Это операция только чтения: в отличие
+  // от кнопок A1-A5 сам буфер не меняется и не удаляется.
+  function printKeyboardBuffer() {
     if (state.overflow) return;
-    resolvePendingOperand();
-    if (state.overflow) return;
-    const value = parseFloat(state.currentValue);
-    if (value === 0) {
-      triggerOverflow(); // деление на 0
-      renderDisplay();
-      return;
-    }
-    applyUnaryResult(1 / value);
+    if (state.keyboardBuffer === null) return; // ещё ничего не набирали с клавиатуры
+    recallValue(state.keyboardBuffer);
   }
 
   // Квадратный корень
@@ -771,10 +830,8 @@ function createCalculator() {
       return;
     }
 
-    const negative = state.currentValue.startsWith('-');
-    const unsigned = negative ? state.currentValue.slice(1) : state.currentValue;
-    const [intPartRaw, fracPart = ''] = unsigned.split('.');
-    const intPart = intPartRaw === '' ? '0' : intPartRaw;
+    // ...дальше без изменений (totalLength, dom.signEl, digitsSequence и т.д.)
+    const { negative, intPart, fracPart } = splitNumberString(state.currentValue);
 
     const totalLength = intPart.length + fracPart.length;
     if (totalLength > MAX_DIGITS) {
@@ -837,6 +894,17 @@ function createCalculator() {
     resetFlags();
   }
 
+  // Разбирает числовую строку (в т.ч. результат formatNumberForEntry) на
+  // знак / целую часть / дробную часть. Общая логика для главного табло
+  // (renderDisplay) и для отрисовки регистров (appendRegisterValueRow) -
+  // чтобы дробные числа форматировались везде одинаково.
+  function splitNumberString(str) {
+    const negative = str.startsWith('-');
+    const unsigned = negative ? str.slice(1) : str;
+    const [intPartRaw, fracPart = ''] = unsigned.split('.');
+    const intPart = intPartRaw === '' ? '0' : intPartRaw;
+    return { negative, intPart, fracPart };
+  }
   // ---------- Регистры памяти ----------
   // Каждая строка регистра строится из тех же "кирпичиков", что и основной
   // экран: отдельный элемент под знак минус + 16 отдельных элементов-разрядов.
@@ -853,7 +921,7 @@ function createCalculator() {
   function appendIdleRegisterRow(container, opacity) {
     const row = document.createElement('span');
     row.className = 'register-digit';
-    for (let i = 0; i < MAX_DIGITS; i++) {
+    for (let i = 0; i < (MAX_DIGITS+2); i++) {
       const digitSpan = document.createElement('span');
       digitSpan.className = 'register-digit-char';
       digitSpan.textContent = '0';
@@ -865,23 +933,49 @@ function createCalculator() {
 
   // Строка со значением регистра: знак + 16 разрядов, число прижато к
   // левому краю, лишние справа разряды - дежурные (OPACITY_IDLE)
+  // Строка со значением регистра: знак + целая часть + (если есть дробная
+  // часть) точка + дробная часть, прижато к левому краю; незанятые справа
+  // разряды - дежурные (OPACITY_IDLE). Целая и дробная часть вместе делят
+  // те же 16 "физических" разрядов, что раньше безраздельно отдавались
+  // целой части.
   function appendRegisterValueRow(container, value, activeOpacity) {
-    const negative = value < 0;
-    const intPart = Math.trunc(Math.abs(value)).toString();
-    const digitsSequence = intPart.padEnd(MAX_DIGITS, '0').slice(0, MAX_DIGITS);
-    const activeLength = Math.min(intPart.length, MAX_DIGITS);
+    // formatNumberForEntry ограничивает число значащих цифр так же, как это
+    // происходит при выводе результата на главное табло - регистр не должен
+    // визуально "разъезжаться" даже для очень длинных чисел
+    const { negative, intPart, fracPart } = splitNumberString(formatNumberForEntry(value));
 
-    const row = document.createElement('span');
+    // Дробная часть обрезается по оставшемуся месту (16 минус то, что уже
+    // занято целой частью). Если сама целая часть длиннее 16 разрядов
+    // (крайний случай, например переполнение при накоплении в addToRegister),
+    // она просто обрежется справа при слайсе ниже - у регистра нет
+    // собственного флага переполнения, как у главного табло
+    const availableForFrac = Math.max(0, MAX_DIGITS - intPart.length);
+    const clippedFrac = fracPart.slice(0, availableForFrac);
+
+    const digitsSequence = (intPart + clippedFrac).padEnd(MAX_DIGITS, '0').slice(0, MAX_DIGITS);
+    const activeLength = Math.min(intPart.length + clippedFrac.length, MAX_DIGITS);
+
+    const row = document.createElement('p');
     row.className = 'register-digit';
 
     const signSpan = document.createElement('span');
     signSpan.className = 'register-sign';
     signSpan.textContent = negative ? '-' : '';
     signSpan.style.opacity = negative ? activeOpacity : OPACITY_IDLE;
-    if (negative) row.style.paddingLeft = 0;
     row.appendChild(signSpan);
 
-    for (let i = 0; i < MAX_DIGITS; i++) {
+    for (let i = 0; i < (MAX_DIGITS+2); i++) {
+      // Точка - отдельный элемент, вставляется один раз, сразу после
+      // последнего разряда целой части, и только если дробная часть реально
+      // есть (иначе для целых чисел регистр выглядит как раньше)
+      if (i === intPart.length && clippedFrac.length > 0) {
+        const dotSpan = document.createElement('span');
+        dotSpan.className = 'register-dot';
+        dotSpan.textContent = '.';
+        dotSpan.style.opacity = activeOpacity;
+        row.appendChild(dotSpan);
+      }
+
       const digitSpan = document.createElement('span');
       digitSpan.className = 'register-digit-char';
       digitSpan.textContent = digitsSequence[i];
@@ -891,12 +985,17 @@ function createCalculator() {
     container.appendChild(row);
   }
 
+  // A1-A5 - из state.memory, KL (регистр клавиатуры) - из state.keyboardBuffer
+  function getRegisterValue(key) {
+    return key === 'KL' ? state.keyboardBuffer : state.memory[key];
+  }
+
   function renderRegisters() {
     Object.keys(dom.registers).forEach((key) => {
       const refs = dom.registers[key];
       if (!refs || !refs.display) return;
 
-      const value = state.powered ? state.memory[key] : null; // при выключенном питании содержимое не показываем
+      const value = state.powered ? getRegisterValue(key) : null; // при выключенном питании содержимое не показываем
       refs.display.innerHTML = '';
 
       if (value === null) {
@@ -917,10 +1016,80 @@ function createCalculator() {
     updateFlag('overflow', 0);
   }
 
-  function resetRegisters() {
-     for (const key in state.memory) {
-        state.memory[key] = null;
+  // ---------- Подгонка размера шрифта регистров под 18 символов ----------
+  // (16 цифр + точка + знак минус) - см. appendRegisterValueRow
+
+  // Скрытый элемент-проба: точная копия строки регистра (.register-digit),
+  // но вне видимой области документа - используется только для измерения
+  // ширины текста при разных font-size, сам по себе никогда не рендерится
+  function getRegisterProbe() {
+    if (dom.registerProbe) return dom.registerProbe;
+
+    const probe = document.createElement('p');
+    probe.className = 'register-digit';
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.left = '-9999px';
+    probe.style.top = '0';
+    probe.style.width = 'auto';
+    dom.memoryFlags.appendChild(probe); // тот же родитель, что и у реальных регистров - те же унаследованные стили
+    dom.registerProbe = probe;
+    return probe;
+  }
+
+  // В цифровых шрифтах разные цифры не всегда одинаковой ширины (в отличие
+  // от классического моноширинного) - перебираем 0-9 и находим реально самую
+  // широкую, чтобы взять её как "худший случай" для всех 16 разрядов
+  function findWidestDigit(probe) {
+    let widest = '0';
+    let widestWidth = 0;
+    for (const digit of '0123456789') {
+      probe.textContent = digit;
+      const width = probe.scrollWidth;
+      if (width > widestWidth) {
+        widestWidth = width;
+        widest = digit;
+      }
     }
+    return widest;
+  }
+
+  // Подбирает font-size (px), при котором строка из 18 символов
+  // ("-" + 16 самых широких цифр + ".") гарантированно умещается в один ряд
+  // по фактической ширине .register-display, без переноса и без обрезки.
+  // Не поднимает размер выше текущего clamp(20px, 2.2vw, 32px) из CSS -
+  // только уменьшает при необходимости.
+  function fitRegisterFontSize() {
+    const sampleDisplay = dom.registers.A1 && dom.registers.A1.display;
+    if (!sampleDisplay || sampleDisplay.clientWidth === 0) return; // ещё не размещён на странице
+
+    const probe = getRegisterProbe();
+    const cssFontSize = parseFloat(getComputedStyle(dom.memoryFlags).fontSize); // верхняя граница (потолок из clamp)
+
+    probe.style.fontSize = `${cssFontSize}px`;
+    const widestDigit = findWidestDigit(probe);
+    probe.textContent = '-' + widestDigit.repeat(MAX_DIGITS) + '.'; // 1 + 16 + 1 = 18 символов
+
+    const availableWidth = sampleDisplay.clientWidth - parseFloat(getComputedStyle(probe).paddingLeft);
+
+    let fontSize = cssFontSize;
+    probe.style.fontSize = `${fontSize}px`;
+    while (probe.scrollWidth > availableWidth && fontSize > 1) {
+      fontSize -= 0.5;
+      probe.style.fontSize = `${fontSize}px`;
+    }
+
+    document.documentElement.style.setProperty('--register-font-size', `${fontSize}px`);
+  }
+
+  // Не пересчитываем на каждый resize-пиксель - достаточно раз в 150мс после
+  // того, как пользователь перестал менять размер окна
+  function debounce(fn, delayMs) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delayMs);
+    };
   }
 
   return { init };
