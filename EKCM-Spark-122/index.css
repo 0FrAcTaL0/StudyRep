@@ -85,8 +85,8 @@
   /* .screen-section / .screen — блок экрана (в % от платы) */
   --screen-top: 38%;
   --screen-left: 13%;
-  --screen-width: 75%;
-  --screen-height: 8%;
+  --screen-width: 80%;
+  --screen-height: 10%;
   --screen-scale: 1.25;
 
   /* .calculator-title — табличка с названием модели (в % от платы) */
@@ -205,33 +205,38 @@ img {
   width: var(--screen-width);
   height: var(--screen-height);
   position: relative;
-  transform: scale(var(--screen-scale));
+  display: block;
   margin: auto;
+  transform: scale(115%);
 }
-
+.screen-holder{
+  display:flex;
+  width:100%;
+  height:100%;
+}
 .screen {
+  width: 100%;
+  height: 100%;
   background-color: var(--color-screen-bg);
   border-top: solid 8px var(--color-screen-border);
   border-bottom: solid 8px var(--color-screen-border);
   border-right: solid 4px var(--color-screen-border);
   border-left: solid 4px var(--color-screen-border);
-  margin: auto;
   text-align: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 0.5%;
+  padding-left:2%;
+  padding-right:2%;
 }
-
-/* Каждый символ на экране (цифры и точки).
-   display:inline-block вместо inline — иначе `width` ниже просто
-   игнорируется браузером, и разряды "плавают" по ширине шрифта. */
 .screen-item {
   color: var(--color-screen-digit);
-  font-size: 50px;
+  font-size: 48px;
   font-family: var(--font-digital);
-  display: inline-block;
-  width: 20px;
   text-align: right;
   opacity: 0.15; /* по умолчанию "погашен", зажигается через JS */
 }
-
 /* Точки (запятые) между разрядами */
 .dot {
   margin-left: -5px;
@@ -364,13 +369,14 @@ img {
   /* transform: scale(var(--keyboard-scale)); */
   display: grid;
   grid-auto-flow: column;
-  gap:35px;
+  gap:6%;
   transform-origin: top;
   margin:auto;
 }
+
 /* --------------------------- Переключатель точности --------------------------- */
 .precision {
-  display: flex;
+  display: block flex;
   position: relative;
   border: 1px #000 solid;
   box-shadow: 0px 0px 2px 3px var(--color-panel-shadow);
@@ -378,18 +384,19 @@ img {
   width: var(--precision-width);
   height: var(--precision-height);
   justify-content: right;
-  padding-right: 12px;
+  padding-right: 8px;
+  gap:12px;
 }
 .precision-row {
   display: grid;
   grid-auto-flow: row;
   align-items: center;
-  gap: 8px;
+  gap: 0px;
   color: #333;
   /* transform: scale(1, 0.6); */
 }
 .precision-button {
-  height: 80% !important;
+  height: 60% !important;
   width: 200% !important;
   cursor: pointer;
   transition: 0.05s linear;
@@ -399,24 +406,8 @@ img {
 .precision-button[data-precision="0"] {
   background-color: var(--color-precision-btn-zero);
 }
-.precision-row-labels {
-  width: 40px;
-  display: grid;
-  grid-auto-flow: row;
-  gap:0px;
-  position: static;
-  font-family: var(--font-gost);
-  font-weight: bold;
-  text-align: right;
-  font-size: 15px;
-  min-height: 0px;
-}
-.precision-row-labels p {
-  margin: 0;
-  border-bottom: 2px solid #000000;
-}
 .precision-button:active {
-  transform: translateY(2px);
+  transform: translateY(1px);
   box-shadow: 0px 1px 0 0 var(--color-key-shadow),
     inset -1px -1px 3px 0px rgba(0, 0, 0, 0.3);
 }
@@ -426,10 +417,29 @@ img {
 .calc button[data-precision="0"]:active{
     background-color: var(--color-precision-btn-zero);
 }
+.precision-row-labels {
+  position: relative;
+  display: grid;
+  grid-auto-flow: row;
+  width: 60%;
+  gap: 0px;
+  font-family: var(--font-gost);
+  font-weight: bold;
+  text-align: right;
+  font-size: 15px;
+  min-height: 0px;
+  top:2.49%;
+}
+.precision-row-labels p {
+  margin: 0;
+  border-bottom: 2px solid #000000;
+  height:70%;
+}
 
 /* Панель клавиш памяти */
 .keys-memory {
-  display: grid;
+  display: block grid;
+  position:relative;
   gap: 2px 2px;
   grid-template-columns: 40px 40px;
   background-color: var(--color-panel-border);
@@ -451,11 +461,11 @@ img {
 
 /* Панель клавиш цифр и точки */
 .digits {
-  display: grid;
+  display: block grid;
+  position: relative;
   grid-template-columns: 40px 40px 40px;
   gap: 2px 2px;
   background-color: var(--color-panel-border);
-  min-width: 0;
   border: 1px solid #000;
   box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
   border-radius: 2%;
@@ -472,8 +482,8 @@ img {
 /* Панель операций (+ обратное деление, смена знака, степень) */
 .operations {
   display: grid;
+  position:relative;
   grid-template-columns: 40px 40px 40px;
-  grid-auto-rows: 40px;
   gap: 2px 2px;
   background-color: var(--color-panel-border);
   border: 1px solid #000;
@@ -517,8 +527,8 @@ img {
 /* --------------------------- Общий стиль всех кнопок --------------------------- */
 .calc button {
   display: inline-block;
-  height: auto;
-  width: auto;
+  height: 100%;
+  width: 100%;
   font-family: var(--font-gost);
   font-size: 22px;
   color: #000000;
