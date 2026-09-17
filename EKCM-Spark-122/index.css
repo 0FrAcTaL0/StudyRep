@@ -37,7 +37,7 @@
   --color-screen-digit: #dd600d;
 
   --color-label-bg: #b8bdb3;
-  --color-label-border: #0000008a;
+  --color-label-border: #000000;
   --color-label-text: #000000;
 
   --color-key-bg: #8a8b63;
@@ -131,7 +131,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background-color: var(--color-page-bg);
+  background-color: #ffffff;
 }
 
 img {
@@ -172,10 +172,10 @@ img {
    ОСНОВНАЯ ПЛАТА КАЛЬКУЛЯТОРА
    ========================================================================= */
 .calc {
-  width: clamp(var(--board-min-width), 55vw, var(--board-max-width));
-  aspect-ratio: var(--board-aspect);
-  background-color: var(--color-board-bg);
-  border: var(--board-border-width) solid var(--color-board-border);
+  width: clamp(320px, 55vw, 825px);
+  aspect-ratio: 825 / 700;
+  background-color: #d8dbd3;
+  border: 20px solid #9aa3a8;
   position: relative;
 }
 
@@ -188,10 +188,10 @@ img {
 /* --------------------------- Декоративная верхняя панель --------------------------- */
 .top-svg {
   position: absolute;
-  left: var(--top-svg-left);
-  width: var(--top-svg-width);
-  height: var(--top-svg-height);
-  transform: scale(var(--top-svg-scale-x), var(--top-svg-scale-y));
+  left: 5%;
+  width: 90%;
+  height: 30%;
+  transform: scale(1.1215, 1.1);
   transform-origin: top;
   pointer-events: none;
 }
@@ -201,9 +201,9 @@ img {
    ========================================================================= */
 .screen-section {
   z-index: 2;
-  top: var(--screen-top);
-  width: var(--screen-width);
-  height: var(--screen-height);
+  top: 38%;
+  width: 80%;
+  height: 10%;
   position: relative;
   display: block;
   margin: auto;
@@ -217,11 +217,11 @@ img {
 .screen {
   width: 100%;
   height: 100%;
-  background-color: var(--color-screen-bg);
-  border-top: solid 8px var(--color-screen-border);
-  border-bottom: solid 8px var(--color-screen-border);
-  border-right: solid 4px var(--color-screen-border);
-  border-left: solid 4px var(--color-screen-border);
+  background-color: #29002c;
+  border-top: solid 8px #0d000f;
+  border-bottom: solid 8px #0d000f;
+  border-right: solid 4px #0d000f;
+  border-left: solid 4px #0d000f;
   text-align: center;
   display: grid;
   grid-auto-flow: column;
@@ -231,9 +231,9 @@ img {
   padding-right:2%;
 }
 .screen-item {
-  color: var(--color-screen-digit);
+  color: #dd600d;
   font-size: 48px;
-  font-family: var(--font-digital);
+  font-family: 'digital';
   text-align: right;
   opacity: 0.15; /* по умолчанию "погашен", зажигается через JS */
 }
@@ -251,16 +251,16 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  top: var(--title-top);  
-  left: var(--title-left);
-  width: var(--title-width);
-  height: var(--title-height);
+  top: 0.5%;  
+  left: 75%;
+  width: 21%;
+  height: 6%;
   min-width: 0px;
-  transform: scale(var(--title-scale));
+  transform: scale(0.9);
 
   content: "";
-  background: var(--color-label-bg);
-  border: 2px solid var(--color-label-border);
+  background: #b8bdb3;
+  border: 2px solid #000000;
   z-index: 0;
 }
 
@@ -268,32 +268,31 @@ img {
   position: relative;
   z-index: 1;
   text-align: center;
-  color: var(--color-label-text);
+  color: #000000;
   text-transform: uppercase;
-  font-family: var(--font-gost);
+  font-family: 'gost';
   font-size: 24px;
   font-weight: bold;
-  border: solid 3px var(--color-panel-border);
-  background-color: var(--color-label-bg);
+  border: solid 3px #000000;
+  background-color: #b8bdb3;
   padding: 0 22px 0 22px;
   white-space: nowrap;
-  max-width: var(--title-max-width);
+  max-width: 155px;
 }
-
 
 /* --------------------------- Переключатель включения --------------------------- */
 .switch-row {
-  top: var(--switch-top);
-  left: var(--switch-left);
-  transform: rotate(var(--switch-rotate)) scale(var(--switch-scale));
+  top: -20%;
+  left: -51.5%;
+  transform: rotate(270deg) scale(1.5);
   display: flex;
   position: relative;
   align-items: center;
 }
 .onoffswitch {
   float: left;
-  box-shadow: 0px 1px 1px 1px var(--color-key-shadow),
-    inset -2px -1px 10px 1px var(--color-key-shadow-inset);
+  box-shadow: 0px 1px 1px 1px #444141,
+    inset -2px -1px 10px 1px rgba(136, 85, 85, 0.5);
   position: relative;
   width: 50px;
 }
@@ -304,7 +303,7 @@ img {
   display: block;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid var(--color-switch-border);
+  border: 2px solid #9aa3a8;
 }
 .onoffswitch-inner {
   display: block;
@@ -327,22 +326,22 @@ img {
 .onoffswitch-inner::before {
   content: " ";
   padding-left: 5px;
-  background-color: var(--color-switch-track);
+  background-color: #6b7073;
 }
 .onoffswitch-inner::after {
   content: " ";
-  background-color: var(--color-switch-track);
+  background-color: #6b7073;
 }
 .onoffswitch-switch {
   display: block;
   width: 13px;
   margin: 2px;
-  background: var(--color-switch-knob);
+  background: #dbebed;
   position: absolute;
   top: 0;
   bottom: 0;
   right: 33px;
-  border: 2px solid var(--color-switch-border);
+  border: 2px solid #9aa3a8;
   border-radius:50%;
   transition: all 0.3s ease-in 0s;
 }
@@ -360,13 +359,11 @@ img {
    КЛАВИАТУРА — ОБЩАЯ ОБЛАСТЬ
    ========================================================================= */
 .keyboard {
-  top: var(--keyboard-top);
-  /* right: var(--keyboard-right); */
-  width: var(--keyboard-width);
-  height: var(--keyboard-height);
-  background-color: var(--color-board-bg);
+  top: 50%;
+  width: 75%;
+  height: 27%;
+  background-color: #d8dbd3;
   position: relative;
-  /* transform: scale(var(--keyboard-scale)); */
   display: grid;
   grid-auto-flow: column;
   gap:6%;
@@ -379,10 +376,10 @@ img {
   display: block flex;
   position: relative;
   border: 1px #000 solid;
-  box-shadow: 0px 0px 2px 3px var(--color-panel-shadow);
+  box-shadow: 0px 0px 2px 3px #9f9f9e;
   border-radius: 5%;
-  width: var(--precision-width);
-  height: var(--precision-height);
+  width: 80px;
+  height: 180px;
   justify-content: right;
   padding-right: 8px;
   gap:12px;
@@ -393,7 +390,6 @@ img {
   align-items: center;
   gap: 0px;
   color: #333;
-  /* transform: scale(1, 0.6); */
 }
 .precision-button {
   height: 60% !important;
@@ -401,21 +397,21 @@ img {
   cursor: pointer;
   transition: 0.05s linear;
   text-align: center;
-  background-color: var(--color-precision-btn);
+  background-color: #000000;
 }
 .precision-button[data-precision="0"] {
-  background-color: var(--color-precision-btn-zero);
+  background-color: #A8392F;
 }
 .precision-button:active {
   transform: translateY(1px);
-  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
+  box-shadow: 0px 1px 0 0 #444141,
     inset -1px -1px 3px 0px rgba(0, 0, 0, 0.3);
 }
 .precision-button.active {
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
 }
 .calc button[data-precision="0"]:active{
-    background-color: var(--color-precision-btn-zero);
+    background-color: #A8392F;
 }
 .precision-row-labels {
   position: relative;
@@ -423,7 +419,7 @@ img {
   grid-auto-flow: row;
   width: 60%;
   gap: 0px;
-  font-family: var(--font-gost);
+  font-family: 'gost';
   font-weight: bold;
   text-align: right;
   font-size: 15px;
@@ -442,9 +438,9 @@ img {
   position:relative;
   gap: 2px 2px;
   grid-template-columns: 40px 40px;
-  background-color: var(--color-panel-border);
+  background-color: #000000;
   border: 1px solid #000;
-  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
   border-radius: 2%;
   font-size: 22px;
 }
@@ -465,14 +461,14 @@ img {
   position: relative;
   grid-template-columns: 40px 40px 40px;
   gap: 2px 2px;
-  background-color: var(--color-panel-border);
+  background-color: #000000;
   border: 1px solid #000;
-  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
   border-radius: 2%;
 }
 
 .digits button {
-  background-color: var(--color-digit-key-bg);
+  background-color: #e6e8d7;
 }
 
 .digits button[value="0"] {
@@ -485,9 +481,9 @@ img {
   position:relative;
   grid-template-columns: 40px 40px 40px;
   gap: 2px 2px;
-  background-color: var(--color-panel-border);
+  background-color: #000000;
   border: 1px solid #000;
-  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
   border-radius: 2%;
 }
 
@@ -504,7 +500,7 @@ img {
 }
 
 .operations button[value="="] {
-  background-color: var(--color-equals-bg);
+  background-color: rgb(166, 47, 10);
   grid-column: span 2;
   font-weight: bold;
 }
@@ -517,10 +513,10 @@ img {
 .additional {
   display: grid;
   gap: 2px 2px;
-  font-family: var(--font-gost);
-  background-color: var(--color-panel-border);
+  font-family: 'gost';
+  background-color: #000000;
   border: 1px solid #000;
-  box-shadow: 0px 0px 2px 4px var(--color-panel-shadow);
+  box-shadow: 0px 0px 2px 4px #9f9f9e;
   border-radius: 2%;
 }
 
@@ -529,10 +525,10 @@ img {
   display: inline-block;
   height: 100%;
   width: 100%;
-  font-family: var(--font-gost);
+  font-family: 'gost';
   font-size: 22px;
   color: #000000;
-  background-color: var(--color-key-bg);
+  background-color: #8a8b63;
   border: none;
   outline: none;
   justify-content: center;
@@ -541,32 +537,26 @@ img {
   text-align: center;
   -webkit-appearance: none;
   appearance: none;
-  box-shadow: 0px 1px 1px 1px var(--color-key-shadow),
-    inset -1px -1px 8px 1px var(--color-key-shadow-inset);
+  box-shadow: 0px 1px 1px 1px #444141,
+    inset -1px -1px 8px 1px rgba(136, 85, 85, 0.5);
   transition: 0.05s linear;
 }
 
 .calc button:active {
   transform: translateY(1px);
-  background-color: var(--color-key-bg);
-  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
-    inset -2px -1px 5px 0px var(--color-key-shadow-inset-active);
+  background-color: #8a8b63;
+  box-shadow: 0px 1px 0 0 #444141,
+    inset -2px -1px 5px 0px rgba(129, 76, 76, 0.5);
 }
 
 .calc button:focus-visible {
-  outline: 2px solid var(--color-key-bg);
+  outline: 2px solid #8a8b63;
   outline-offset: 1px;
 }
 
-
 /* =========================================================================
    ПАНЕЛЬ РЕГИСТРОВ И ФЛАГОВ
-   -------------------------------------------------------------------------
-   Раньше позиционировалась через position:absolute без позиционированного
-   предка, из-за чего "плавала" относительно всей страницы и требовала
-   компенсирующего отрицательного сдвига платы (--body-offset-x). Теперь
-   это обычный flex-элемент внутри .workspace — сам встаёт рядом с платой
-   и переносится под неё на узких экранах (см. медиа-запрос ниже). */
+   -------------------------------------------------------------------------*/
 
 .registers{
   display:flex;
@@ -580,21 +570,16 @@ img {
 .memory_flags {
   display: grid;
   align-items: start;
-  flex: 1 1 var(--memory-flags-basis);
-  max-width: var(--memory-flags-basis);
-  min-width: var(--memory-flags-min);
+  flex: 1 1 330px;
+  max-width: 330px;
+  min-width: 220px;
   height: fit-content;
   gap: 10px;
   border: 3px solid #000000;
 
-  font-family: var(--font-digital);
+  font-family: 'digital';
   font-size: clamp(20px, 2.2vw, 32px);
-  color: var(--color-register-text);
-
-  /* Этот размер - "потолок": именно им пользуются флаги (OP/OF/PF).
-     Для строки регистра он используется как значение по умолчанию, пока
-     JS ещё не посчитал --register-font-size (см. fitRegisterFontSize) */
-  --register-font-size: clamp(20px, 2.2vw, 32px);
+  color: #292121;
 }
 
 .memory {
@@ -651,41 +636,36 @@ img {
 
 #instruction-button {
   position: relative;
-  background-color: var(--color-instruction-bg);
+  background-color: #4a6a8f;
   color: #fff;
   border: none;
   padding: 10px 12px 10px 10px;
   font-size: 18px;
-  font-family: var(--font-gost);
+  font-family: 'gost';
   cursor: pointer;
-  box-shadow: 0px 3px 1px 1px var(--color-key-shadow),
-    inset -2px -1px 10px 1px var(--color-instruction-shadow-inset);
+  box-shadow: 0px 3px 1px 1px #444141,
+    inset -2px -1px 10px 1px rgba(10, 30, 99, 0.5);
   transition: 0.05s linear;
   height: 80px;
 }
 
 #instruction-button:hover {
-  background-color: var(--color-instruction-bg-hover);
+  background-color: #5f7fa0;
 }
 
 #instruction-button:active {
   transform: translateY(2px);
-  box-shadow: 0px 1px 0 0 var(--color-key-shadow),
-    inset -2px -1px 5px 0px var(--color-instruction-shadow-inset);
+  box-shadow: 0px 1px 0 0 #444141,
+    inset -2px -1px 5px 0px rgba(10, 30, 99, 0.5);
 }
 
 #instruction-button:focus-visible {
-  outline: 2px solid var(--color-instruction-bg-hover);
+  outline: 2px solid #5f7fa0;
   outline-offset: 2px;
 }
 
 /* =========================================================================
    АДАПТИВНОСТЬ ДЛЯ УЗКИХ ЭКРАНОВ
-   -------------------------------------------------------------------------
-   На небольших диагоналях панель регистров переносится под плату
-   калькулятора, а гигантский верхний отступ кнопки "Инструкция"
-   (рассчитанный под десктопный макет) уменьшается — иначе он занимал
-   бы половину экрана телефона впустую.
    ========================================================================= */
 @media (max-width: 760px) {
   .workspace {
@@ -694,11 +674,11 @@ img {
   }
 
   .memory_flags {
-    max-width: min(var(--memory-flags-basis), 92vw);
+    max-width: min(330px, 92vw);
     width: 100%;
   }
 
   .calc {
-    width: clamp(var(--board-min-width), 92vw, var(--board-max-width));
+    width: clamp(320px, 92vw, 825px);
   }
 }
