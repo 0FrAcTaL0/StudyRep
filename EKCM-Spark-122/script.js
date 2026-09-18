@@ -17,19 +17,35 @@
  *  - арифметика: +, -, *, /
  *  - индикация переполнения (флаг OF)
  *  - регистры A1-A5: каждый - просто число (или null, пока не задано).
- *    Кнопка A1..A5 - сохранить/загрузить/обменять текущее значение с
- *    регистром (см. pressRegisterButton); кнопки "2"/"3" - прибавляют
- *    текущее значение с экрана к A2/A3 соответственно (см. addToRegister).
- *    Занесение в регистр по кнопке A1..A5 может выполняться "с удалением
- *    источника" (после сохранения экран возвращается к дежурному "0") или
- *    "без удаления" (значение просто копируется, экран не трогается) -
- *    режим переключается константой MEMORY_STORE_DELETES_SOURCE.
- *  - регистр клавиатуры (Кл, state.keyboardBuffer): отдельно от A1-A5,
- *    хранит последнее значение, набранное непосредственно с клавиатуры
- *    (цифрами/точкой/сменой знака) - в отличие от A1-A5 сбрасывается при
- *    СК/включении, как и сам экран. Кнопка "Печать" выводит его на экран,
- *    не изменяя сам буфер (см. printKeyboardBuffer). Отображается в общем
- *    сегменте регистров вместе с A1-A5.
+ *    Обмена данными с экраном больше нет - кнопка A1..A5 выполняет ровно
+ *    одну из двух операций, без свапа (см. pressRegisterButton):
+ *      - на экране есть активное введённое значение (hasValue) -> "заслать
+ *        с перезаписью": текущее значение всегда записывается в регистр,
+ *        замещая собой то, что там было (даже если там уже что-то лежало) -
+ *        старое содержимое регистра нигде не сохраняется и на экран не
+ *        возвращается;
+ *      - на экране дежурный "0" (hasValue === false) -> "вытащить с
+ *        перезаписью, заменяя нулями": значение регистра выводится на
+ *        экран, а сам регистр очищается (становится пустым/"нулевым",
+ *        как будто в него никогда не заносили значение).
+ *    Занесение в регистр может дополнительно "удалять источник" (после
+ *    сохранения экран возвращается к дежурному "0") или нет - режим
+ *    переключается константой MEMORY_STORE_DELETES_SOURCE.
+ *    Кнопки "2"/"3" - прибавляют текущее значение с экрана к A2/A3
+ *    соответственно (см. addToRegister), их поведение не изменилось.
+ *  - регистр буфера клавиатуры (КБ, state.keyboardBuffer): не клон текущего
+ *    вводимого значения, а именно ПРЕДЫДУЩИЙ операнд, если он был. Пока в
+ *    буфере нет зафиксированного значения (null - "режим зеркала"), он
+ *    просто повторяет текущее вводимое число (см.
+ *    getKeyboardBufferDisplayValue). Как только терм реально фиксируется
+ *    в контексте вычислений (выбор оператора, закрытие скобки, "=" - см.
+ *    finalizeContextTerm), это значение "замораживается" в буфере и
+ *    дальнейший ввод цифр его больше не трогает. Разморозить буфер
+ *    (вернуть в режим зеркала) можно только двумя способами: вызвать его
+ *    из памяти кнопкой "Печать" (см. printKeyboardBuffer - после вывода на
+ *    экран буфер сбрасывается) либо выполнить полную очистку СК/включение
+ *    (см. resetState). Отображается в общем сегменте регистров вместе с
+ *    A1-A5.
  *  - если A1 задан (не null) и второй операнд не введён явно (сразу "оператор" + "="),
  *    он берётся из A1 (сам регистр не меняется, см. calculateResult) - это
  *    касается всех бинарных операций, включая обратное деление
@@ -41,6 +57,22 @@
  *    числом.
  *  - возведение в степень: n нажатий кнопки степени подряд = число в степени
  *    n+1 (степень считается от исходного числа, не от промежуточного результата)
+ *  - квадратный корень работает по тому же принципу цепочки, что и степень:
+ *    n нажатий кнопки корня подряд = корень (n+1)-й степени от исходного
+ *    числа, т.е. √ = степень 1/2, √√ = степень 1/3 и т.д. (см. state.rootChain,
+ *    sqrtValue) - также считается от исходного числа цепочки, а не от
+ *    промежуточного результата.
+ *  - приоритет корня и степени над окружающими бинарными операциями: обе
+ *    кнопки применяются ТОЛЬКО к текущему терму (тому значению, которое
+ *    сейчас вводится для уже выбранного оператора - см.
+ *    ensureCurrentValueIsTermValue), не трогая и не вычисляя ещё не
+ *    закрытый оператор внешнего контекста (ctx.pendingOperator). Сам терм
+ *    фиксируется в контексте позже, как обычно - при выборе следующего
+ *    оператора, закрытии скобки или "=" (см. finalizeContextTerm). Поэтому,
+ *    например, "2 * 3 √ =" (или "**") сначала возводит/извлекает корень
+ *    именно из 3, и только потом (при "=") домножает результат на 2 - а не
+ *    наоборот, как было бы при немедленном вычислении всего "2*3" перед
+ *    применением корня/степени.
  *  - точность вычислений (кнопки "B"/13/11/9/7/5/3): ограничивает количество
  *    значащих десятичных разрядов результата вычислений (см. applyPrecisionLimit).
  *    "B" (0) - без ограничения
@@ -50,7 +82,9 @@
  *    (проход 1: * и /, проход 2: + и -) и кладёт результат во внешний
  *    контекст как обычное введённое число. "=" на верхнем уровне закрывает
  *    все ещё не закрытые скобки автоматически, а затем считает корневой
- *    контекст тем же алгоритмом.
+ *    контекст тем же алгоритмом. Корень и степень в этот проход не
+ *    попадают вовсе (см. пункт выше) - к моменту, когда терм попадает в
+ *    numbers/operators, они уже применены.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -108,6 +142,11 @@ function createCalculator() {
     // не активна; { base, exponent } - если предыдущим действием было именно
     // нажатие степени (см. resetPowerChain/powerButtonPressed)
     powerChain: null,
+    // Цепочка последовательных нажатий кнопки корня (√): null, если цепочка
+    // не активна; { base, degree } - если предыдущим действием было именно
+    // нажатие корня (см. resetRootChain/sqrtValue). degree - степень корня
+    // (2 = квадратный, 3 = кубический и т.д.), эквивалент степени 1/degree
+    rootChain: null,
     // Точность вычислений: 0 - без ограничения (режим "B": до 16 целых
     // значащих разрядов и до 15 дробных - по факту дальше просто работает
     // обычная логика табло/переполнения); 13/11/9/7/5/3 - количество
@@ -144,6 +183,7 @@ function createCalculator() {
     };
 
     dom.memoryFlags = document.querySelector('.memory_flags');
+    dom.instructionButton = document.getElementById('instruction-button');
 
     dom.keyboard = document.querySelector('.keyboard');
     dom.precisionButtons = Array.from(document.querySelectorAll('.precision-button'));
@@ -160,7 +200,6 @@ function createCalculator() {
     } else {
       fitRegisterFontSize();
     }
-
     window.addEventListener('resize', debounce(fitRegisterFontSize, 150));
   }
 
@@ -175,6 +214,12 @@ function createCalculator() {
 
     // Один обработчик на всю клавиатуру вместо слушателя на каждую кнопку
     dom.keyboard.addEventListener('click', onKeyboardClick);
+
+    if (dom.instructionButton) {
+      dom.instructionButton.addEventListener('click', () => {
+        window.open('./instr.html', '_blank');
+      });
+    }
   }
 
   function onKeyboardClick(event) {
@@ -223,7 +268,8 @@ function createCalculator() {
     state.overflow = false;
     state.hasValue = false;
     state.powerChain = null;
-    state.keyboardBuffer = null; // буфер клавиатуры - часть "экрана", сбрасывается вместе с ним
+    state.rootChain = null;
+    state.keyboardBuffer = null; // буфер клавиатуры - часть "экрана", сбрасывается вместе с ним; полная очистка - один из двух способов его "разморозить" (см. doc-комментарий вверху файла)
     // Точность вычислений (кнопки "B"/13/11/9/7/5/3) НЕ сбрасываем при СК или
     // включении - это как физический переключатель, который остаётся в своём
     // положении, пока его не переставят вручную
@@ -233,10 +279,14 @@ function createCalculator() {
 
   // ---------- Обработка обычных клавиш ----------
   function handleKey(value) {
-    // Цепочка повторных нажатий "степени" держится только пока подряд жмут
-    // именно эту кнопку - любое другое действие её обрывает
+    // Цепочки повторных нажатий "степени" и "корня" держатся только пока
+    // подряд жмут именно свою кнопку - любое другое действие (включая
+    // нажатие ДРУГОЙ из этих двух кнопок) обрывает цепочку
     if (value !== '**') {
       resetPowerChain();
+    }
+    if (value !== '√') {
+      resetRootChain();
     }
 
     if (/^[0-9]$/.test(value)) {
@@ -291,7 +341,8 @@ function createCalculator() {
 
   function handleMemoryKey(value) {
     if (state.overflow) return; // в состоянии переполнения с памятью не работаем
-    resetPowerChain(); // работа с регистрами тоже обрывает цепочку повторных нажатий степени
+    resetPowerChain(); // работа с регистрами тоже обрывает цепочки повторных нажатий степени/корня
+    resetRootChain();
 
     // "2"/"3" - прибавляют текущее значение с экрана к A2/A3 соответственно
     // (если регистр ещё не использовался - считаем его нулём)
@@ -314,36 +365,26 @@ function createCalculator() {
     console.log(`Неизвестная клавиша памяти: ${value}`);
   }
 
-  // Единая логика для кнопок A1-A5:
-  //  - регистр ещё не использовался (null) -> сохраняем в него текущее значение;
-  //  - регистр уже содержит значение и на экране есть активное значение (hasValue) ->
-  //    обмен: текущее значение уходит в регистр, а то, что там лежало,
-  //    выходит на экран;
-  //  - регистр содержит значение, но на экране дежурный "0" (hasValue === false) ->
-  //    просто выводим значение регистра на экран, сам регистр не меняем.
+  // Единая логика для кнопок A1-A5 - БЕЗ обмена данными, только две
+  // независимые операции "с перезаписью":
+  //  - на экране есть активное введённое значение (hasValue) -> "заслать":
+  //    текущее значение ВСЕГДА (даже если в регистре уже что-то лежало)
+  //    записывается в регистр, замещая его прежнее содержимое. Старое
+  //    содержимое регистра нигде не сохраняется и на экран не возвращается;
+  //  - на экране дежурный "0" (hasValue === false) -> "вытащить": значение
+  //    регистра выводится на экран, а сам регистр заменяется нулём/пустотой
+  //    (как будто в него никогда не клали значение). Если регистр и так пуст -
+  //    вытаскивать нечего, ничего не происходит.
   function pressRegisterButton(name) {
-    const stored = state.memory[name];
-
-    if (stored === null) {
-      state.memory[name] = parseFloat(state.currentValue);
-      // Регистр был пуст - действительно занесение "с чистого листа": если
-      // включён режим переноса с удалением, источник (экран) очищается
-      if (MEMORY_STORE_DELETES_SOURCE) clearCurrentValueToIdle();
-      renderRegisters();
-      return;
-    }
-
     if (state.hasValue) {
-      // Регистр уже занят - это обмен: текущее значение уходит в регистр, а
-      // то, что там лежало, выходит на экран. Экран в любом случае получает
-      // новое (старое регистровое) значение, так что режим удаления здесь
-      // ничего дополнительно не меняет - предыдущее содержимое экрана уже
-      // не остаётся на месте ни в одном из режимов
       state.memory[name] = parseFloat(state.currentValue);
-      recallValue(stored);
+      // Если включён режим переноса с удалением, источник (экран) очищается
+      if (MEMORY_STORE_DELETES_SOURCE) clearCurrentValueToIdle();
     } else {
+      const stored = state.memory[name];
+      if (stored === null) return; // регистр пуст - вытаскивать нечего
       recallValue(stored);
-      state.memory[name] = null;
+      state.memory[name] = null; // "заменяя нулями" - регистр снова пуст
     }
     renderRegisters();
   }
@@ -410,7 +451,7 @@ function createCalculator() {
     }
     state.hasValue = true;
     state.operandPending = false;
-    updateKeyboardBuffer();
+    refreshKeyboardBufferDisplay();
     renderDisplay();
   }
 
@@ -425,7 +466,7 @@ function createCalculator() {
     }
     state.hasValue = true;
     state.operandPending = false;
-    updateKeyboardBuffer();
+    refreshKeyboardBufferDisplay();
     renderDisplay();
   }
 
@@ -437,16 +478,18 @@ function createCalculator() {
     } else if (state.currentValue !== '0') {
       state.currentValue = '-' + state.currentValue;
     }
-    updateKeyboardBuffer();
+    refreshKeyboardBufferDisplay();
     renderDisplay();
   }
 
-  // Фиксирует в регистре клавиатуры то, что реально набрано вручную (цифрами/
-  // точкой/сменой знака) - см. state.keyboardBuffer и doc-комментарий вверху
-  // файла. Регистры/расчёты currentValue не трогают, поэтому вызывается
-  // только из inputDigit/inputDot/toggleSign
-  function updateKeyboardBuffer() {
-    state.keyboardBuffer = parseFloat(state.currentValue);
+  // Перерисовывает регистры после ввода цифры/точки/смены знака. Сам буфер
+  // клавиатуры (state.keyboardBuffer) здесь НЕ трогаем: пока он "заморожен"
+  // (не null), дальнейший набор цифр на него не влияет - в буфере остаётся
+  // зафиксированный предыдущий операнд; пока он null ("режим зеркала"),
+  // отображаемое значение и так пересчитывается на лету из currentValue (см.
+  // getKeyboardBufferDisplayValue), явно обновлять состояние не нужно -
+  // достаточно просто перерисовать регистры
+  function refreshKeyboardBufferDisplay() {
     renderRegisters();
   }
 
@@ -495,32 +538,39 @@ function createCalculator() {
       ctx.operators.push(ctx.pendingOperator);
       ctx.pendingOperator = null;
     }
+    // Терм реально зафиксирован в контексте - он становится "предыдущим
+    // операндом" и замораживается в регистре клавиатуры (см. doc-комментарий
+    // вверху файла и getKeyboardBufferDisplayValue); дальнейший набор цифр
+    // (для следующего терма) на это значение уже не влияет
+    state.keyboardBuffer = value;
+    renderRegisters();
   }
 
-  // Если у текущего (самого вложенного) контекста есть оператор, ожидающий
-  // операнд, а новый операнд так и не появился - "доразрешаем" его прямо
-  // сейчас: недостающий операнд берётся через getCurrentTermValue (то есть
-  // из A1, если ничего не вводили), контекст сворачивается до одного
-  // промежуточного числа на том же уровне вложенности (сама скобка не
-  // закрывается), и это число становится текущим отображаемым значением.
-  // Нужно для клавиш «÷» (invdiv/1÷x), «√», «pow» - без этого они бы просто
-  // проигнорировали висящий оператор и посчитали своё на устаревшем числе.
-  function resolvePendingOperand() {
-    const ctx = currentContext();
-    if (ctx.pendingOperator === null) return;
-
-    finalizeContextTerm(ctx);
-    const result = evaluateContext(ctx);
-    if (state.overflow) {
-      renderDisplay();
-      return;
-    }
-
-    ctx.numbers = [result];
-    ctx.operators = [];
-    ctx.pendingOperator = null;
-
-    state.currentValue = formatNumberForEntry(result);
+  // Готовит currentValue к применению унарной операции высшего приоритета
+  // (√ или **): убеждается, что на экране лежит именно ТЕКУЩИЙ терм - то,
+  // что вводится для уже выбранного оператора (с той же автоподстановкой
+  // A1, что и при обычном завершении терма - см. getCurrentTermValue).
+  //
+  // Если новый операнд уже набран цифрами (operandPending === false) -
+  // ничего не делаем: currentValue и так уже верный терм, а висящий
+  // оператор внешнего контекста (ctx.pendingOperator) не трогаем и НЕ
+  // вычисляем - именно в этом отличие от старой resolvePendingOperand,
+  // которая всегда сворачивала весь контекст целиком. Так корень/степень
+  // применяются только к своему операнду и получают тем самым высший
+  // приоритет: например, "2 * 3 √" сначала берёт корень из 3, а уже потом,
+  // при "=", результат домножается на 2 - а не наоборот.
+  //
+  // Если новый операнд ещё не набирали (operandPending === true, например
+  // сразу после выбора оператора нажали √/**) - подставляем то же
+  // значение, что подставилось бы при обычном завершении терма (как
+  // правило, A1), чтобы унарная операция сработала над реальным операндом,
+  // а не над устаревшим числом с экрана. Сам контекст (numbers/operators/
+  // pendingOperator) при этом не меняется - терм по-прежнему зафиксируется
+  // позже как обычно.
+  function ensureCurrentValueIsTermValue() {
+    if (!state.operandPending) return;
+    const value = getCurrentTermValue();
+    state.currentValue = formatNumberForEntry(value);
     state.hasValue = true;
     state.operandPending = false;
   }
@@ -601,9 +651,10 @@ function createCalculator() {
       ctx.pendingOperator = operator;
     }
     else {
-      const value = getCurrentTermValue();
-      ctx.numbers.push(value);
-      if (ctx.pendingOperator !== null) ctx.operators.push(ctx.pendingOperator);
+      // Терм реально завершён - используем ту же логику, что и при закрытии
+      // скобки/"=" (заодно замораживает регистр клавиатуры, см.
+      // finalizeContextTerm)
+      finalizeContextTerm(ctx);
       ctx.pendingOperator = operator;
     }
 
@@ -744,29 +795,49 @@ function createCalculator() {
     renderDisplay();
   }
 
-  // «Печать»: выводит на экран значение регистра клавиатуры - последнее
-  // значение, набранное непосредственно с клавиатуры (см. state.keyboardBuffer
-  // и inputDigit/inputDot/toggleSign). Это операция только чтения: в отличие
-  // от кнопок A1-A5 сам буфер не меняется и не удаляется.
+  // «Печать»: выводит на экран текущее значение регистра клавиатуры (либо
+  // зафиксированный предыдущий операнд, либо, в режиме зеркала, то же
+  // значение, что и так уже на экране - см. getKeyboardBufferDisplayValue).
+  // Это одновременно и есть "вызов из памяти" - один из двух способов
+  // разморозить буфер (см. doc-комментарий вверху файла): после вывода на
+  // экран буфер сбрасывается в null и снова начинает зеркалировать ввод.
   function printKeyboardBuffer() {
     if (state.overflow) return;
-    if (state.keyboardBuffer === null) return; // ещё ничего не набирали с клавиатуры
-    recallValue(state.keyboardBuffer);
+    const value = getKeyboardBufferDisplayValue();
+    if (value === null) return; // буфер пуст, ещё ничего не набирали и не считали
+    recallValue(value);
+    state.keyboardBuffer = null; // "вызов из памяти" - буфер снова в режиме зеркала
+    renderRegisters();
   }
 
-  // Квадратный корень
+  // Корень: работает по тому же принципу цепочки, что и степень (см.
+  // powerButtonPressed) - n нажатий подряд = корень (n+1)-й степени, т.е.
+  // эквивалент степени 1/(n+1). Основание запоминается один раз при первом
+  // нажатии цепочки и не меняется, пока нажатия идут подряд (см.
+  // resetRootChain в handleKey/handleMemoryKey) - степень корня считается
+  // от исходного числа, а не от уже извлечённого на экране результата.
   function sqrtValue() {
     if (state.overflow) return;
-    resolvePendingOperand();
-    if (state.overflow) return;
-    const value = parseFloat(state.currentValue);
-    if (value < 0) {
+    ensureCurrentValueIsTermValue();
+
+    if (state.rootChain === null) {
+      state.rootChain = { base: parseFloat(state.currentValue), degree: 2 };
+    } else {
+      state.rootChain.degree += 1;
+    }
+
+    const { base, degree } = state.rootChain;
+    if (base < 0) {
       // корень из отрицательного числа не поддерживаем (комплексных чисел нет)
       triggerOverflow();
       renderDisplay();
       return;
     }
-    applyUnaryResult(Math.sqrt(value));
+    applyUnaryResult(Math.pow(base, 1 / degree));
+  }
+
+  function resetRootChain() {
+    state.rootChain = null;
   }
 
   // Выделение целой части: просто отбрасываем дробную часть, без округления
@@ -798,8 +869,7 @@ function createCalculator() {
   // на экране результата.
   function powerButtonPressed() {
     if (state.overflow) return;
-    resolvePendingOperand();
-    if (state.overflow) return;
+    ensureCurrentValueIsTermValue();
 
     if (state.powerChain === null) {
       state.powerChain = { base: parseFloat(state.currentValue), exponent: 2 };
@@ -985,9 +1055,21 @@ function createCalculator() {
     container.appendChild(row);
   }
 
-  // A1-A5 - из state.memory, KL (регистр клавиатуры) - из state.keyboardBuffer
+  // Значение, которое сейчас нужно ПОКАЗАТЬ в регистре КБ (KL):
+  //  - буфер "заморожен" (не null) -> показываем именно его - зафиксированный
+  //    предыдущий операнд, независимо от того, что сейчас набирается на экране;
+  //  - буфер пуст (null, "режим зеркала") -> показываем текущее вводимое
+  //    значение (или ничего, если на экране дежурный "0" и ничего ещё не
+  //    вводилось) - см. doc-комментарий вверху файла
+  function getKeyboardBufferDisplayValue() {
+    if (state.keyboardBuffer !== null) return state.keyboardBuffer;
+    return state.hasValue ? parseFloat(state.currentValue) : null;
+  }
+
+  // A1-A5 - из state.memory, KL (регистр клавиатуры) - из
+  // getKeyboardBufferDisplayValue (см. выше)
   function getRegisterValue(key) {
-    return key === 'KL' ? state.keyboardBuffer : state.memory[key];
+    return key === 'KL' ? getKeyboardBufferDisplayValue() : state.memory[key];
   }
 
   function renderRegisters() {

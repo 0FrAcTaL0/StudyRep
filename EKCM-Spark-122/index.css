@@ -505,6 +505,10 @@ img {
   font-weight: bold;
 }
 
+.calc button[value="="]:active{
+  background-color: rgb(166, 47, 10)
+}
+
 .operations button[value="/-/"] {
   font-size: 17px;
 }

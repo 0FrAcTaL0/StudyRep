@@ -8,11 +8,11 @@
 </head>
 <body>
   <div class="app">
-    <main class="workspace">
+    <div class="workspace">
       <div class="instruction">
         <button id="instruction-button" type="button">Инструкция</button>
       </div>
-      <section class="calculator">
+      <div class="calculator">
         <div class="calc">
           <!-- Основной блок калькулятора -->
           <div class="calc_body">
@@ -139,7 +139,7 @@
               <div class="additional">
                 <!-- onclick убран, id добавлен: обработчик печати теперь
                       вешается в script.js (см. dom.printButton). -->
-                <button type="button" class="big-button" value="()" aria-label="Печать регистра клавиатуры">ˆ</button><!-- Печать -->
+                <button type="button" class="big-button" value="()" aria-label="Вывод регистра клавиатуры">ˆ</button><!-- Печать -->
                 <button type="button" class="big-button" value="ВЦ" aria-label="Выделение целой части">/</button>
                 <button type="button" class="math-button" value=")">)</button>
                 <button type="button" class="math-button" value="(">(</button>
@@ -147,9 +147,9 @@
             </div>
           </div>
         </div>
-      </section>
+      </div>
       <!-- Блок регистров и флагов (отображает состояние памяти и флаги) -->
-      <aside class="registers">
+      <div class="registers">
         <div class="memory_flags">
           <div class="memory">
             <!-- Регистры A1–A5 (сохраняемые числа).
@@ -196,8 +196,8 @@
             <div class="flag"><label>PF:</label><span id="flag_precision">0</span></div>        <!-- Точность вычисления -->
           </div>
         </div>
-      </aside>
-    </main>
+      </div>
+    </div>
   </div>
   <!-- Подключение JavaScript -->
   <script src="./script.js"></script>
