@@ -58,6 +58,12 @@
   --color-switch-knob: #dbebed;
 
   --color-register-text: #292121;
+  /* Ширина одного разряда регистра и их количество (знак + 16 цифр + точка) -
+     раньше ширина .register-display подбиралась в JS через scrollWidth,
+     что не пережило переход регистров на строки; теперь ширина задаётся
+     здесь и .register-display её просто использует через calc(). */
+  --register-digit-width: 14.55px;
+  --register-digit-count: 18;
 
   --color-instruction-bg: #4a6a8f;
   --color-instruction-bg-hover: #5f7fa0;
@@ -574,8 +580,8 @@ img {
 .memory_flags {
   display: grid;
   align-items: start;
-  flex: 1 1 330px;
-  max-width: 330px;
+  flex: 1 1 360px;
+  max-width: 360px;
   min-width: 220px;
   height: fit-content;
   gap: 10px;
@@ -606,7 +612,7 @@ img {
   height: fit-content;
 }
 .register-display {
-  width: 248px;
+  width: calc(var(--register-digit-count) * var(--register-digit-width));
   max-width: 100%;
   height:fit-content;
   height: fit-content;
@@ -614,7 +620,7 @@ img {
 }
 .register-digit {
   margin: 0 0;
-  padding-left: 14.55px;
+  padding-left: var(--register-digit-width);
   height: 32px;
   height:100%;
   font-size: var(--register-font-size);
