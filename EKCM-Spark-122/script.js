@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * Калькулятор "Искра-122".
  *
@@ -8,7 +7,7 @@
  *  - отображение чисел на табло (16 разрядов + плавающая точка).
  *    Три уровня яркости знаков:
  *      0.15 - калькулятор выключен (дежурная засветка);
- *      0.75 - включён, но разряд ещё не содержит введённого значения (нули-заглушки);
+ *      0.5 - включён, но разряд ещё не содержит введённого значения (нули-заглушки);
  *      1    - разряд, реально входящий в текущее введённое/вычисленное число.
  *    Число выводится начиная с левого края табло.
  *  - ввод цифр и десятичной точки
@@ -16,31 +15,21 @@
  *  - сброс (СК)
  *  - арифметика: +, -, *, /
  *  - индикация переполнения (флаг OF)
- *  - регистры A1-A5: каждый - просто число (или null, пока не задано).
+ *  - регистры A1-A5: каждый - число, по умолчанию 0 (см. state.memory).
  */
-
 document.addEventListener('DOMContentLoaded', () => {
   const calculator = createCalculator();
   calculator.init();
 });
 
 function createCalculator() {
-  const MAX_DIGITS = 16;        // количество цифровых разрядов на табло
-  const OPACITY_OFF = '0.15';   // калькулятор выключен
-  const OPACITY_IDLE = '0.5';  // включён, но разряд - незаполненный ноль-заглушка
-  const OPACITY_ACTIVE = '1';   // разряд входит в реально введённое/вычисленное число
+  const MAX_DIGITS = 16;
+  const OPACITY_OFF = '0.15';
+  const OPACITY_IDLE = '0.5';
+  const OPACITY_ACTIVE = '1';
 
-  //  true  - выборка из пустого регистра трактуется как выборка нуля: на
-  //          экран выводится "0", а его ведущий разряд засвечивается на
-  //          полную яркость (см. showLeadingZeroActive), в точности как
-  //          при нажатии СК (см. clearAll);
-  //  false - выборка из пустого регистра ничего не делает, экран не
-  //          трогается
-  const MEMORY_STORE_DELETES_SOURCE = true;
+  const AUTO_SUBSTITUTION_KEYS = ['+', '-', '*', '/', 'invdiv', ')', '='];
 
-  const AUTO_SUBSTITUTION_KEYS = ['+', '-', '*', '/', 'invdiv', '**', '√', ')', '=', 'ВЦ'];
-
-  // ---------- Состояние ----------
   const state = {
     powered: false,
     currentValue: '0', 
@@ -54,7 +43,7 @@ function createCalculator() {
    
     registerMode: 'recall',
    
-    memory: { A1: null, A2: null, A3: null, A4: null, A5: null },
+    memory: { A1: 0, A2: 0, A3: 0, A4: 0, A5: 0 },
   
     keyboardBuffer: null,
 
@@ -64,46 +53,43 @@ function createCalculator() {
 
     precision: 0,
   };
-
-  // ---------- DOM-ссылки ----------
+ 
   const dom = {};
 
   function cacheDom() {
     dom.powerSwitch = document.getElementById('myonoffswitch');
 
     const digitEls = Array.from(document.querySelectorAll('.screen .digit'));
-    dom.signEl = digitEls[0];          // знак минус
-    dom.digitEls = digitEls.slice(1);  // 16 элементов: [0]=разряд16 ... [15]=разряд1
+    dom.signEl = digitEls[0];
+    dom.digitEls = digitEls.slice(1);
 
-    // 16 точек: [0..14] - разделители между разрядами, [15] - индикатор переполнения
     dom.dotEls = Array.from(document.querySelectorAll('.screen .dot'));
 
     dom.registers = {};
     ['A1', 'A2', 'A3', 'A4', 'A5', 'KL'].forEach((key) => {
       const root = document.getElementById(`register_${key}`);
       dom.registers[key] = {
-        display: root ? root.querySelector('.register-display') : null, // сюда рендерится строка со значением регистра
+        display: root ? root.querySelector('.register-display') : null,
       };
     });
 
     dom.flags = {
-      operation: document.getElementById('flag_operation'), // тип последней активированной операции (+, -, *, / и т.д.)
+      operation: document.getElementById('flag_operation'),
       overflow: document.getElementById('flag_overflow'),
-      precision: document.getElementById('flag_precision'), // текущая точность вычислений (0/13/11/9/7/5/3)
+      precision: document.getElementById('flag_precision'),
     };
-
     dom.memoryFlags = document.querySelector('.memory_flags');
-    dom.instructionButton = document.getElementById('instruction-button');
 
     dom.keyboard = document.querySelector('.keyboard');
     dom.precisionButtons = Array.from(document.querySelectorAll('.precision-button'));
+
+    dom.instructionButton = document.getElementById('instruction-button');
   }
 
-  // ---------- Инициализация ----------
   function init() {
     cacheDom();
     bindEvents();
-    renderPoweredOff(); // при загрузке страницы калькулятор считается выключенным
+    renderPoweredOff();
 
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(fitRegisterFontSize);
@@ -112,7 +98,7 @@ function createCalculator() {
     }
     window.addEventListener('resize', debounce(fitRegisterFontSize, 150));
   }
-
+ 
   function bindEvents() {
     dom.powerSwitch.addEventListener('change', (event) => {
       if (event.target.checked) {
@@ -122,7 +108,6 @@ function createCalculator() {
       }
     });
 
-    // Один обработчик на всю клавиатуру вместо слушателя на каждую кнопку
     dom.keyboard.addEventListener('click', onKeyboardClick);
 
     if (dom.instructionButton) {
@@ -141,7 +126,7 @@ function createCalculator() {
       return;
     }
 
-    if (!state.powered) return; // выключенный калькулятор не реагирует на клавиши
+    if (!state.powered) return;
 
     if (button.classList.contains('memory-button')) {
       handleMemoryKey(button.value);
@@ -153,7 +138,6 @@ function createCalculator() {
     }
   }
 
-  // ---------- Включение/выключение ----------
   function turnOn() {
     state.powered = true;
     resetState();
@@ -181,7 +165,6 @@ function createCalculator() {
     state.registerMode = 'recall';
   }
 
-  // ---------- Обработка обычных клавиш ----------
   function handleKey(value) {
     if (value !== '**') {
       resetPowerChain();
@@ -193,6 +176,10 @@ function createCalculator() {
     if (/^[0-9]$/.test(value)) {
       inputDigit(value);
       return;
+    }
+
+    if (!AUTO_SUBSTITUTION_KEYS.includes(value)) {
+      state.operandPending = false;
     }
 
     switch (value) {
@@ -209,22 +196,22 @@ function createCalculator() {
       case '-':
       case '*':
       case '/':
-      case 'invdiv': // обратное деление: бинарная операция, меняющая операнды местами (см. applyOperator)
+      case 'invdiv':
         setOperator(value);
         break;
       case '=':
         calculateResult();
         break;
-      case '√': // квадратный корень
+      case '√':
         sqrtValue();
         break;
-      case '**': // возведение в степень: n подряд нажатий -> степень n+1
+      case '**':
         powerButtonPressed();
         break;
-      case 'ВЦ': // выделение целой части (отбрасываем дробную часть, без округления)
+      case 'ВЦ':
         integerPart();
         break;
-      case '()': // «Печать»: вывести на экран значение регистра клавиатуры (буфера)
+      case '()':
         printKeyboardBuffer();
         break;
       case '(':
@@ -238,22 +225,18 @@ function createCalculator() {
       default:
         console.log(`Неизвестная клавиша: ${value}`);
     }
-
-    if (!AUTO_SUBSTITUTION_KEYS.includes(value)) {
-      state.operandPending = false;
-    }
   }
 
   function handleMemoryKey(value) {
-    if (state.overflow) return; // в состоянии переполнения с памятью не работаем
-    resetPowerChain(); // работа с регистрами тоже обрывает цепочки повторных нажатий степени/корня
+    if (state.overflow) return;
+    resetPowerChain();
     resetRootChain();
 
     state.operandPending = false;
 
     if (value === '2') {
       addToRegister('A2');
-      state.registerMode = 'recall'; // накопление в регистре - триггер режима "выборка" для A1-A5
+      state.registerMode = 'recall';
       renderRegisters();
       return;
     }
@@ -274,19 +257,12 @@ function createCalculator() {
 
   function pressRegisterButton(name) {
     if (state.registerMode === 'store') {
-
       state.memory[name] = parseFloat(state.currentValue);
+      state.waitingForNewEntry = true;
     } else {
       const stored = state.memory[name];
-      if (stored !== null) {
-        recallValue(stored);
-        state.memory[name] = null; // "заменяя нулями" - регистр снова пуст
-        if (stored === 0) showLeadingZeroActive();
-      } 
-      else if (MEMORY_STORE_DELETES_SOURCE) {
-        recallValue(0);
-        showLeadingZeroActive();
-      }
+      recallValue(stored);
+      if (stored === 0) showLeadingZeroActive();
     }
 
     state.registerMode = 'recall';
@@ -298,14 +274,13 @@ function createCalculator() {
   }
 
   function addToRegister(name) {
-    const current = state.memory[name] === null ? 0 : state.memory[name];
-    state.memory[name] = current + parseFloat(state.currentValue);
+    state.memory[name] += parseFloat(state.currentValue);
+    state.waitingForNewEntry = true;
   }
 
-  // Выводит извлечённое из регистра значение на экран как новое текущее число
   function recallValue(value) {
     state.currentValue = formatNumberForEntry(value);
-    state.waitingForNewEntry = true; // следующая цифра начнёт новый ввод, а не допишется к этому числу
+    state.waitingForNewEntry = true;
     state.hasValue = true;
     state.operandPending = false;
     renderDisplay();
@@ -315,11 +290,9 @@ function createCalculator() {
     const precision = button.dataset.precision;
     const wasActive = button.classList.contains('active');
 
-    // Снимаем "прожатость" со всех кнопок точности — активна максимум одна
     dom.precisionButtons.forEach((btn) => btn.classList.remove('active'));
 
     if (wasActive) {
-      // Повторный клик по уже активной кнопке — сбрасываем точность к "B" (0)
       state.precision = 0;
     } else {
       button.classList.add('active');
@@ -329,7 +302,6 @@ function createCalculator() {
     updateFlag('precision', state.precision);
   }
 
-  // ---------- Ввод числа ----------
   function inputDigit(digit) {
     if (state.overflow) return;
     if (state.waitingForNewEntry) {
@@ -340,12 +312,12 @@ function createCalculator() {
     } else if (state.currentValue === '0') {
       state.currentValue = digit;
     } else {
-      if (countSignificantDigits(state.currentValue) >= MAX_DIGITS) triggerOverflow(); // разряды кончились, вызываем переполнение
+      if (countSignificantDigits(state.currentValue) >= MAX_DIGITS) triggerOverflow();
       state.currentValue += digit;
     }
     state.hasValue = true;
     state.operandPending = false;
-    state.registerMode = 'store'; // ввод числа - триггер режима "заслать" для A1-A5 (см. doc-комментарий вверху файла)
+    state.registerMode = 'store';
     refreshKeyboardBufferDisplay();
     renderDisplay();
   }
@@ -361,7 +333,7 @@ function createCalculator() {
     }
     state.hasValue = true;
     state.operandPending = false;
-    state.registerMode = 'store'; // ввод точки - тоже часть "ввода числа" (см. doc-комментарий вверху файла)
+    state.registerMode = 'store';
     refreshKeyboardBufferDisplay();
     renderDisplay();
   }
@@ -374,12 +346,11 @@ function createCalculator() {
     } else if (state.currentValue !== '0') {
       state.currentValue = '-' + state.currentValue;
     }
-    state.registerMode = 'store'; // отрицание - триггер режима "заслать" для A1-A5 (см. doc-комментарий вверху файла)
+    state.registerMode = 'store';
     refreshKeyboardBufferDisplay();
     renderDisplay();
   }
 
-  // достаточно просто перерисовать регистры
   function refreshKeyboardBufferDisplay() {
     renderRegisters();
   }
@@ -391,8 +362,6 @@ function createCalculator() {
     resetFlags();
     dom.digitEls[0].style.opacity = OPACITY_ACTIVE;
   }
-
-  // ---------- Скобки и контексты вычислений ----------
 
   function createContext() {
     return {
@@ -406,20 +375,25 @@ function createCalculator() {
     return state.contextStack[state.contextStack.length - 1];
   }
 
-  // без очистки регистра")
   function getCurrentTermValue() {
-    if (state.operandPending && state.memory.A1 !== null) {
+    if (state.operandPending) {
       return state.memory.A1;
     }
     return parseFloat(state.currentValue);
   }
 
   function finalizeContextTerm(ctx) {
+    const usedA1Substitution = state.operandPending;
     const value = getCurrentTermValue();
     ctx.numbers.push(value);
     if (ctx.pendingOperator !== null) {
       ctx.operators.push(ctx.pendingOperator);
       ctx.pendingOperator = null;
+    }
+    if (usedA1Substitution) {
+      state.currentValue = formatNumberForEntry(value);
+      state.hasValue = true;
+      renderDisplay();
     }
     state.keyboardBuffer = value;
     renderRegisters();
@@ -437,7 +411,6 @@ function createCalculator() {
     const numbers = ctx.numbers.slice();
     const operators = ctx.operators.slice();
 
-    // Проход 1: умножение, деление и обратное деление (тот же приоритет)
     for (let i = 0; i < operators.length; ) {
       if (operators[i] === '*' || operators[i] === '/' || operators[i] === 'invdiv') {
         const result = applyOperator(numbers[i], numbers[i + 1], operators[i]);
@@ -449,7 +422,6 @@ function createCalculator() {
       }
     }
 
-    // Проход 2: сложение и вычитание того, что осталось, слева направо
     let acc = numbers[0];
     for (let i = 0; i < operators.length; i++) {
       acc = applyOperator(acc, numbers[i + 1], operators[i]);
@@ -471,7 +443,9 @@ function createCalculator() {
 
   function closeParenthesis() {
     if (state.overflow) return;
-    if (state.contextStack.length <= 1) return; // нечего закрывать - скобку не открывали
+    if (state.contextStack.length <= 1) return;
+
+    state.registerMode = 'store';
 
     const ctx = state.contextStack.pop();
     finalizeContextTerm(ctx);
@@ -489,7 +463,6 @@ function createCalculator() {
     renderDisplay();
   }
 
-  // ---------- Арифметика ----------
   function setOperator(operator) {
     if (state.overflow) return;
     const ctx = currentContext();
@@ -497,9 +470,9 @@ function createCalculator() {
     ctx.pendingOperator = operator;
 
     state.waitingForNewEntry = true;
-    state.operandPending = true; // ждём следующий терм для этого оператора
+    state.operandPending = true;
     state.hasValue = true;
-    state.registerMode = 'recall'; // +,-,×,÷,обр.дел - триггер режима выборка для A1-A5
+    state.registerMode = 'recall';
     renderDisplay();
     updateFlag('operation', operator);
   }
@@ -507,18 +480,19 @@ function createCalculator() {
   function calculateResult() {
     if (state.overflow) return;
 
+    state.registerMode = 'store';
+
     while (state.contextStack.length > 1) {
       closeParenthesis();
       if (state.overflow) return;
     }
 
     const ctx = state.contextStack[0];
-    if (ctx.pendingOperator === null && ctx.numbers.length === 0) return; // считать нечего - оператор ни разу не выбирали
+    if (ctx.pendingOperator === null && ctx.numbers.length === 0) return;
 
     finalizeContextTerm(ctx);
     const result = evaluateContext(ctx);
 
-    // Начинаем следующее выражение "с чистого листа"
     state.contextStack[0] = createContext();
 
     if (state.overflow) {
@@ -543,14 +517,14 @@ function createCalculator() {
     const abs = Math.abs(value);
 
     const magnitude = Math.floor(Math.log10(abs));
-    const integerDigits = magnitude + 1; // может быть <= 0 для чисел меньше 1
+    const integerDigits = magnitude + 1;
 
     let limited;
     if (integerDigits >= precision) {
       const factor = Math.pow(10, integerDigits - precision);
       limited = Math.round(abs / factor) * factor;
     } else {
-      const displayedIntDigits = Math.max(integerDigits, 1); // "0" перед запятой тоже занимает разряд
+      const displayedIntDigits = Math.max(integerDigits, 1);
       const maxFracDigits = MAX_DIGITS - displayedIntDigits;
       const fracDigits = Math.min(precision - integerDigits, maxFracDigits);
       const factor = Math.pow(10, fracDigits);
@@ -573,7 +547,7 @@ function createCalculator() {
         }
         result = a / b;
         break;
-      case 'invdiv': // обратное деление: операнды меняются местами - результат = b / a
+      case 'invdiv':
         if (a === 0) {
           triggerOverflow();
           return 0;
@@ -598,8 +572,6 @@ function createCalculator() {
     updateFlag('overflow', 1);
   }
 
-  // ---------- Унарные операции (обратное деление, корень, степень, целая часть) ----------
-
   function applyUnaryResult(result) {
     result = applyPrecisionLimit(result);
     if (!Number.isFinite(result) || Math.abs(result) >= Math.pow(10, MAX_DIGITS)) {
@@ -608,24 +580,23 @@ function createCalculator() {
     }
     state.currentValue = formatNumberForEntry(result);
     state.hasValue = true;
-    state.waitingForNewEntry = true; // следующая цифра начнёт новый ввод, а не допишется к результату
+    state.waitingForNewEntry = true;
     state.operandPending = false;
     renderDisplay();
   }
 
   function printKeyboardBuffer() {
     if (state.overflow) return;
-    state.registerMode = 'recall'; // "Печать" - триггер режима "выборка" для A1-A5 (см. doc-комментарий вверху файла)
     const value = getKeyboardBufferDisplayValue();
-    if (value === null) return; // буфер пуст, ещё ничего не набирали и не считали
+    if (value === null) return;
     recallValue(value);
-    state.keyboardBuffer = null; // "вызов из памяти" - буфер снова в режиме зеркала
+    state.registerMode = 'store';
     renderRegisters();
   }
 
   function sqrtValue() {
     if (state.overflow) return;
-    state.registerMode = 'store'; // корень - триггер режима "заслать" для A1-A5 (см. doc-комментарий вверху файла)
+    state.registerMode = 'store';
     ensureCurrentValueIsTermValue();
 
     if (state.rootChain === null) {
@@ -669,7 +640,7 @@ function createCalculator() {
 
   function powerButtonPressed() {
     if (state.overflow) return;
-    state.registerMode = 'store'; // степень - триггер режима "заслать" для A1-A5 (см. doc-комментарий вверху файла)
+    state.registerMode = 'store';
     ensureCurrentValueIsTermValue();
 
     if (state.powerChain === null) {
@@ -685,16 +656,44 @@ function createCalculator() {
     state.powerChain = null;
   }
 
+  function expandExponential(expStr) {
+    const match = /^(\d+)(?:\.(\d+))?e([+-]\d+)$/i.exec(expStr);
+    if (!match) return expStr;
+    const intDigits = match[1];
+    const fracDigits = match[2] || '';
+    const exponent = parseInt(match[3], 10);
+    const digits = intDigits + fracDigits;
+    const pointPos = intDigits.length + exponent;
+
+    if (pointPos <= 0) {
+      return '0.' + '0'.repeat(-pointPos) + digits;
+    }
+    if (pointPos >= digits.length) {
+      return digits + '0'.repeat(pointPos - digits.length);
+    }
+    return digits.slice(0, pointPos) + '.' + digits.slice(pointPos);
+  }
+
   function formatNumberForEntry(num) {
+    if (num === 0) return '0';
     if (Number.isInteger(num)) return String(num);
-    return String(parseFloat(num.toPrecision(MAX_DIGITS)));
+
+    const negative = num < 0;
+    const abs = Math.abs(num);
+    let str = String(parseFloat(abs.toPrecision(MAX_DIGITS)));
+
+    if (str.indexOf('e') !== -1 || str.indexOf('E') !== -1) {
+      str = expandExponential(str);
+      str = str.replace(/0+$/, '').replace(/\.$/, '');
+    }
+
+    return negative ? '-' + str : str;
   }
 
   function countSignificantDigits(str) {
     return str.replace('-', '').replace('.', '').length;
   }
 
-  // ---------- Отрисовка табло ----------
   function renderDisplay() {
     if (state.overflow) {
       renderOverflow();
@@ -758,12 +757,11 @@ function createCalculator() {
     const intPart = intPartRaw === '' ? '0' : intPartRaw;
     return { negative, intPart, fracPart };
   }
-  // ---------- Регистры памяти ----------
 
   function appendIdleRegisterRow(container, opacity) {
     const row = document.createElement('span');
     row.className = 'register-digit';
-    for (let i = 0; i < (MAX_DIGITS+2); i++) {
+    for (let i = 0; i < MAX_DIGITS; i++) {
       const digitSpan = document.createElement('span');
       digitSpan.className = 'register-digit-char';
       digitSpan.textContent = '0';
@@ -782,16 +780,18 @@ function createCalculator() {
     const digitsSequence = (intPart + clippedFrac).padEnd(MAX_DIGITS, '0').slice(0, MAX_DIGITS);
     const activeLength = Math.min(intPart.length + clippedFrac.length, MAX_DIGITS);
 
-    const row = document.createElement('p');
+    const row = document.createElement('span');
     row.className = 'register-digit';
+    row.style.paddingLeft = negative ? '2.5px' : '14.55px';
 
+  
     const signSpan = document.createElement('span');
     signSpan.className = 'register-sign';
     signSpan.textContent = negative ? '-' : '';
     signSpan.style.opacity = negative ? activeOpacity : OPACITY_IDLE;
     row.appendChild(signSpan);
 
-    for (let i = 0; i < (MAX_DIGITS+2); i++) {
+    for (let i = 0; i < MAX_DIGITS; i++) {
       if (i === intPart.length && clippedFrac.length > 0) {
         const dotSpan = document.createElement('span');
         dotSpan.className = 'register-dot';
@@ -823,7 +823,7 @@ function createCalculator() {
       const refs = dom.registers[key];
       if (!refs || !refs.display) return;
 
-      const value = state.powered ? getRegisterValue(key) : null; // при выключенном питании содержимое не показываем
+      const value = state.powered ? getRegisterValue(key) : null;
       refs.display.innerHTML = '';
 
       if (value === null) {
@@ -834,7 +834,6 @@ function createCalculator() {
     });
   }
 
-  // ---------- Флаги состояния ----------
   function updateFlag(name, value) {
     if (dom.flags[name]) dom.flags[name].textContent = String(value);
   }
@@ -843,8 +842,6 @@ function createCalculator() {
     updateFlag('operation', 0);
     updateFlag('overflow', 0);
   }
-
-  // ---------- Подгонка размера шрифта регистров под 18 символов ----------
 
   function getRegisterProbe() {
     if (dom.registerProbe) return dom.registerProbe;
@@ -877,14 +874,14 @@ function createCalculator() {
 
   function fitRegisterFontSize() {
     const sampleDisplay = dom.registers.A1 && dom.registers.A1.display;
-    if (!sampleDisplay || sampleDisplay.clientWidth === 0) return; // ещё не размещён на странице
+    if (!sampleDisplay || sampleDisplay.clientWidth === 0) return;
 
     const probe = getRegisterProbe();
-    const cssFontSize = parseFloat(getComputedStyle(dom.memoryFlags).fontSize); // верхняя граница (потолок из clamp)
+    const cssFontSize = parseFloat(getComputedStyle(dom.memoryFlags).fontSize);
 
     probe.style.fontSize = `${cssFontSize}px`;
     const widestDigit = findWidestDigit(probe);
-    probe.textContent = '-' + widestDigit.repeat(MAX_DIGITS) + '.'; // 1 + 16 + 1 = 18 символов
+    probe.textContent = '-' + widestDigit.repeat(MAX_DIGITS) + '.';
 
     const availableWidth = sampleDisplay.clientWidth - parseFloat(getComputedStyle(probe).paddingLeft);
 

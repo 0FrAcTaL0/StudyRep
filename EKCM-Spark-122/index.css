@@ -608,6 +608,7 @@ img {
 .register-display {
   width: 248px;
   max-width: 100%;
+  height:fit-content;
   height: fit-content;
   overflow: hidden;      /* страховка на случай, если JS ещё не отработал */
 }
@@ -615,6 +616,7 @@ img {
   margin: 0 0;
   padding-left: 14.55px;
   height: 32px;
+  height:100%;
   font-size: var(--register-font-size);
   white-space: nowrap;   /* не даём 18 символам перенестись на вторую строку */
 }
