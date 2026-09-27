@@ -30,6 +30,214 @@ function createCalculator() {
 
   const AUTO_SUBSTITUTION_KEYS = ['+', '-', '*', '/', 'invdiv', ')', '='];
 
+  // ---------------------------------------------------------------------
+  // Десятичная арифметика на BigInt.
+  //
+  // Причина ошибки "9,999999999999999:0,000000000000001 = 9999999999999998"
+  // в том, что вычисления велись через обычные числа JS (IEEE-754 double).
+  // Двоичная плавающая точка не может точно хранить многие 16-значные
+  // десятичные числа (сам литерал 9.999999999999999 уже округляется до
+  // 9.999999999999998 при разборе), поэтому результат "плывёт" на
+  // последнем разряде. Ниже - неисчезающая (BCD-подобная) десятичная
+  // арифметика: все значения хранятся и обрабатываются как строки/BigInt,
+  // без обращения к плавающей точке, что даёт точный результат в пределах
+  // разрядной сетки в 16 цифр, как и было в оригинальной ЭКВМ.
+  // ---------------------------------------------------------------------
+  const DEC_SCALE = 40; // "запасные" разряды для промежуточных вычислений
+  const DEC_SCALE_BIG = 10n ** BigInt(DEC_SCALE);
+
+  function decTrimTrailingZeros(str) {
+    if (str.indexOf('.') === -1) return str;
+    str = str.replace(/0+$/, '');
+    str = str.replace(/\.$/, '');
+    return str;
+  }
+
+  function decNormalize(value) {
+    let s = String(value).trim();
+    if (s === '') return '0';
+    let sign = '';
+    if (s[0] === '-') { sign = '-'; s = s.slice(1); }
+    else if (s[0] === '+') { s = s.slice(1); }
+    if (s.endsWith('.')) s = s.slice(0, -1);
+    if (s === '') s = '0';
+    let [intPart, fracPart = ''] = s.split('.');
+    intPart = intPart.replace(/^0+(?=\d)/, '');
+    if (intPart === '') intPart = '0';
+    let combined = decTrimTrailingZeros(intPart + (fracPart ? '.' + fracPart : ''));
+    if (combined === '' || /^0(\.0*)?$/.test(combined)) return '0';
+    return sign + combined;
+  }
+
+  function decIsZero(value) {
+    return decNormalize(value) === '0';
+  }
+
+  function decIsNegative(value) {
+    return decNormalize(value).charAt(0) === '-';
+  }
+
+  function decToFixed(value) {
+    const s = decNormalize(value);
+    let sign = 1n;
+    let body = s;
+    if (body.startsWith('-')) { sign = -1n; body = body.slice(1); }
+    let [intPart, fracPart = ''] = body.split('.');
+    fracPart = fracPart.length > DEC_SCALE ? fracPart.slice(0, DEC_SCALE) : fracPart.padEnd(DEC_SCALE, '0');
+    return sign * BigInt(intPart + fracPart || '0');
+  }
+
+  function decFromFixed(fixed) {
+    const negative = fixed < 0n;
+    const abs = negative ? -fixed : fixed;
+    const s = abs.toString().padStart(DEC_SCALE + 1, '0');
+    let intPart = s.slice(0, s.length - DEC_SCALE).replace(/^0+(?=\d)/, '') || '0';
+    let fracPart = s.slice(s.length - DEC_SCALE);
+    let result = decTrimTrailingZeros(intPart + (fracPart ? '.' + fracPart : ''));
+    if (result === '' || result === '0') return '0';
+    return negative ? '-' + result : result;
+  }
+
+  function decAdd(a, b) {
+    return decFromFixed(decToFixed(a) + decToFixed(b));
+  }
+
+  function decSub(a, b) {
+    return decFromFixed(decToFixed(a) - decToFixed(b));
+  }
+
+  function decMul(a, b) {
+    return decFromFixed((decToFixed(a) * decToFixed(b)) / DEC_SCALE_BIG);
+  }
+
+  function decDiv(a, b) {
+    const fa = decToFixed(a);
+    const fb = decToFixed(b);
+    if (fb === 0n) return null;
+    const negative = (fa < 0n) !== (fb < 0n);
+    const numAbs = fa < 0n ? -fa : fa;
+    const denAbs = fb < 0n ? -fb : fb;
+    const numerator = numAbs * DEC_SCALE_BIG;
+    let q = numerator / denAbs;
+    const r = numerator % denAbs;
+    if (r * 2n >= denAbs) q += 1n; // округление до ближайшего
+    return decFromFixed(negative ? -q : q);
+  }
+
+  function bigIntSqrtFloor(n) {
+    if (n < 2n) return n < 0n ? 0n : n;
+    let x = n;
+    let y = (x + 1n) / 2n;
+    while (y < x) {
+      x = y;
+      y = (x + n / x) / 2n;
+    }
+    return x;
+  }
+
+  function decSqrt(value) {
+    const fa = decToFixed(value);
+    if (fa < 0n) return null;
+    return decFromFixed(bigIntSqrtFloor(fa * DEC_SCALE_BIG));
+  }
+
+  function decPowInt(base, exponent) {
+    let result = '1';
+    let b = base;
+    let e = exponent;
+    while (e > 0) {
+      if (e & 1) result = decMul(result, b);
+      e = Math.floor(e / 2);
+      if (e > 0) b = decMul(b, b);
+    }
+    return result;
+  }
+
+  function decNthRoot(value, n) {
+    if (n === 2) return decSqrt(value);
+    const negative = decIsNegative(value);
+    if (negative && n % 2 === 0) return null;
+    const absValue = negative ? value.slice(1) : value;
+    let guess = Math.pow(decNormalize(absValue) || 1e-300, 1 / n);
+    if (!Number.isFinite(guess) || guess <= 0) guess = 1;
+    let x = decNormalize(String(guess));
+    for (let i = 0; i < 60; i++) {
+      const xPowNm1 = decPowInt(x, n - 1);
+      if (decIsZero(xPowNm1)) break;
+      const term = decDiv(absValue, xPowNm1);
+      if (term === null) break;
+      x = decDiv(decAdd(decMul(x, String(n - 1)), term), String(n));
+    }
+    return negative ? '-' + x : x;
+  }
+
+  // Число "целых" (до запятой) значащих разрядов: для чисел >=1 - длина
+  // целой части; для чисел <1 - число со знаком минус, равное количеству
+  // нулей сразу после запятой (используется, чтобы правильно делить
+  // 16-разрядную сетку табло между целой и дробной частью).
+  function decIntegerDigitCount(value) {
+    const s = decNormalize(value);
+    if (s === '0') return 0;
+    const body = s.startsWith('-') ? s.slice(1) : s;
+    const [intPart, fracPart = ''] = body.split('.');
+    if (intPart !== '0') return intPart.length;
+    let leadingZeros = 0;
+    while (leadingZeros < fracPart.length && fracPart[leadingZeros] === '0') leadingZeros++;
+    return -leadingZeros;
+  }
+
+  // На сколько разрядов от точки нужно округлить/усечь число, чтобы уместить
+  // его в table targetSig значащих цифр при 16-разрядной сетке табло.
+  function decComputeCapExponent(value, targetSig) {
+    const integerDigits = decIntegerDigitCount(value);
+    if (integerDigits >= targetSig) {
+      return integerDigits - targetSig;
+    }
+    const displayedIntDigits = Math.max(integerDigits, 1);
+    const maxFracDigits = MAX_DIGITS - displayedIntDigits;
+    const fracDigits = Math.min(targetSig - integerDigits, maxFracDigits);
+    return -Math.max(fracDigits, 0);
+  }
+
+  function decAtExponent(value, exponent, round) {
+    const s = decNormalize(value);
+    if (s === '0') return '0';
+    let sign = '';
+    let body = s;
+    if (body.startsWith('-')) { sign = '-'; body = body.slice(1); }
+    const [intPart, fracPart = ''] = body.split('.');
+    const scale = fracPart.length;
+    const shift = exponent + scale;
+    const n = BigInt(intPart + fracPart || '0');
+    let resultN;
+    if (shift <= 0) {
+      resultN = n;
+    } else {
+      const divisor = 10n ** BigInt(shift);
+      let q = n / divisor;
+      if (round) {
+        const r = n % divisor;
+        if (r * 2n >= divisor) q += 1n;
+      }
+      resultN = q * divisor;
+    }
+    const digitsStr = resultN.toString().padStart(scale + 1, '0');
+    const newIntPart = digitsStr.slice(0, digitsStr.length - scale).replace(/^0+(?=\d)/, '') || '0';
+    const newFracPart = scale > 0 ? digitsStr.slice(digitsStr.length - scale) : '';
+    const result = decTrimTrailingZeros(newIntPart + (newFracPart ? '.' + newFracPart : ''));
+    if (result === '' || result === '0') return '0';
+    return sign === '-' ? '-' + result : result;
+  }
+
+  function decRoundAtExponent(value, exponent) {
+    return decAtExponent(value, exponent, true);
+  }
+
+  function decTruncateAtExponent(value, exponent) {
+    return decAtExponent(value, exponent, false);
+  }
+  // ---------------------------------------------------------------------
+
   const state = {
     powered: false,
     currentValue: '0', 
@@ -43,7 +251,7 @@ function createCalculator() {
    
     registerMode: 'recall',
    
-    memory: { A1: 0, A2: 0, A3: 0, A4: 0, A5: 0 },
+    memory: { A1: '0', A2: '0', A3: '0', A4: '0', A5: '0' },
   
     keyboardBuffer: null,
 
@@ -149,7 +357,10 @@ function createCalculator() {
   function turnOff() {
     state.powered = false;
     renderPoweredOff();
-    updateFlag('precision', 0);
+    for (let i = 1; i <= 5; i++) {
+      state.memory[`A${i}`] = 0;
+    }
+    state.keyboardBuffer = null;
   }
 
   function resetState() {
@@ -257,7 +468,7 @@ function createCalculator() {
 
   function pressRegisterButton(name) {
     if (state.registerMode === 'store') {
-      state.memory[name] = parseFloat(state.currentValue);
+      state.memory[name] = decNormalize(state.currentValue);
       state.waitingForNewEntry = true;
     } else {
       const stored = state.memory[name];
@@ -274,7 +485,7 @@ function createCalculator() {
   }
 
   function addToRegister(name) {
-    state.memory[name] += parseFloat(state.currentValue);
+    state.memory[name] = decAdd(state.memory[name], decNormalize(state.currentValue));
     state.waitingForNewEntry = true;
   }
 
@@ -379,7 +590,7 @@ function createCalculator() {
     if (state.operandPending) {
       return state.memory.A1;
     }
-    return parseFloat(state.currentValue);
+    return decNormalize(state.currentValue);
   }
 
   function finalizeContextTerm(ctx) {
@@ -510,49 +721,30 @@ function createCalculator() {
   }
 
   function applyPrecisionLimit(value) {
-    if (state.precision === 0 || value === 0) return value;
-
-    const precision = state.precision;
-    const negative = value < 0;
-    const abs = Math.abs(value);
-
-    const magnitude = Math.floor(Math.log10(abs));
-    const integerDigits = magnitude + 1;
-
-    let limited;
-    if (integerDigits >= precision) {
-      const factor = Math.pow(10, integerDigits - precision);
-      limited = Math.round(abs / factor) * factor;
-    } else {
-      const displayedIntDigits = Math.max(integerDigits, 1);
-      const maxFracDigits = MAX_DIGITS - displayedIntDigits;
-      const fracDigits = Math.min(precision - integerDigits, maxFracDigits);
-      const factor = Math.pow(10, fracDigits);
-      limited = Math.round(abs * factor) / factor;
-    }
-
-    return negative ? -limited : limited;
+    if (state.precision === 0 || decIsZero(value)) return value;
+    const exponent = decComputeCapExponent(value, state.precision);
+    return decRoundAtExponent(value, exponent);
   }
 
   function applyOperator(a, b, operator) {
     let result;
     switch (operator) {
-      case '+': result = a + b; break;
-      case '-': result = a - b; break;
-      case '*': result = a * b; break;
+      case '+': result = decAdd(a, b); break;
+      case '-': result = decSub(a, b); break;
+      case '*': result = decMul(a, b); break;
       case '/':
-        if (b === 0) {
+        if (decIsZero(b)) {
           triggerOverflow();
           return 0;
         }
-        result = a / b;
+        result = decDiv(a, b);
         break;
       case 'invdiv':
-        if (a === 0) {
+        if (decIsZero(a)) {
           triggerOverflow();
           return 0;
         }
-        result = b / a;
+        result = decDiv(b, a);
         break;
       default:
         result = b;
@@ -560,10 +752,6 @@ function createCalculator() {
 
     result = applyPrecisionLimit(result);
 
-    if (!Number.isFinite(result) || Math.abs(result) >= Math.pow(10, MAX_DIGITS)) {
-      triggerOverflow();
-      return 0;
-    }
     return result;
   }
 
@@ -573,8 +761,12 @@ function createCalculator() {
   }
 
   function applyUnaryResult(result) {
+    if (result === null) {
+      triggerOverflow();
+      return;
+    }
     result = applyPrecisionLimit(result);
-    if (!Number.isFinite(result) || Math.abs(result) >= Math.pow(10, MAX_DIGITS)) {
+    if (decIntegerDigitCount(result) > MAX_DIGITS) {
       triggerOverflow();
       return;
     }
@@ -600,18 +792,18 @@ function createCalculator() {
     ensureCurrentValueIsTermValue();
 
     if (state.rootChain === null) {
-      state.rootChain = { base: parseFloat(state.currentValue), degree: 2 };
+      state.rootChain = { base: decNormalize(state.currentValue), degree: 2 };
     } else {
       state.rootChain.degree += 1;
     }
 
     const { base, degree } = state.rootChain;
-    if (base < 0) {
+    if (decIsNegative(base)) {
       triggerOverflow();
       renderDisplay();
       return;
     }
-    applyUnaryResult(Math.pow(base, 1 / degree));
+    applyUnaryResult(decNthRoot(base, degree));
   }
 
   function resetRootChain() {
@@ -623,10 +815,10 @@ function createCalculator() {
     state.registerMode = 'store';
 
     ensureCurrentValueIsTermValue();
-    const value = parseFloat(state.currentValue);
-    const result = applyPrecisionLimit(Math.trunc(value));
+    const value = decNormalize(state.currentValue);
+    const result = applyPrecisionLimit(decTruncateAtExponent(value, 0));
 
-    if (!Number.isFinite(result) || Math.abs(result) >= Math.pow(10, MAX_DIGITS)) {
+    if (decIntegerDigitCount(result) > MAX_DIGITS) {
       triggerOverflow();
       return;
     }
@@ -644,50 +836,23 @@ function createCalculator() {
     ensureCurrentValueIsTermValue();
 
     if (state.powerChain === null) {
-      state.powerChain = { base: parseFloat(state.currentValue), exponent: 2 };
+      state.powerChain = { base: decNormalize(state.currentValue), exponent: 2 };
     } else {
       state.powerChain.exponent += 1;
     }
 
-    applyUnaryResult(Math.pow(state.powerChain.base, state.powerChain.exponent));
+    applyUnaryResult(decPowInt(state.powerChain.base, state.powerChain.exponent));
   }
 
   function resetPowerChain() {
     state.powerChain = null;
   }
 
-  function expandExponential(expStr) {
-    const match = /^(\d+)(?:\.(\d+))?e([+-]\d+)$/i.exec(expStr);
-    if (!match) return expStr;
-    const intDigits = match[1];
-    const fracDigits = match[2] || '';
-    const exponent = parseInt(match[3], 10);
-    const digits = intDigits + fracDigits;
-    const pointPos = intDigits.length + exponent;
-
-    if (pointPos <= 0) {
-      return '0.' + '0'.repeat(-pointPos) + digits;
-    }
-    if (pointPos >= digits.length) {
-      return digits + '0'.repeat(pointPos - digits.length);
-    }
-    return digits.slice(0, pointPos) + '.' + digits.slice(pointPos);
-  }
-
-  function formatNumberForEntry(num) {
-    if (num === 0) return '0';
-    if (Number.isInteger(num)) return String(num);
-
-    const negative = num < 0;
-    const abs = Math.abs(num);
-    let str = String(parseFloat(abs.toPrecision(MAX_DIGITS)));
-
-    if (str.indexOf('e') !== -1 || str.indexOf('E') !== -1) {
-      str = expandExponential(str);
-      str = str.replace(/0+$/, '').replace(/\.$/, '');
-    }
-
-    return negative ? '-' + str : str;
+  function formatNumberForEntry(value) {
+    const num = decNormalize(value);
+    if (num === '0') return '0';
+    const exponent = decComputeCapExponent(num, MAX_DIGITS);
+    return decTruncateAtExponent(num, exponent);
   }
 
   function countSignificantDigits(str) {
@@ -811,7 +976,7 @@ function createCalculator() {
 
   function getKeyboardBufferDisplayValue() {
     if (state.keyboardBuffer !== null) return state.keyboardBuffer;
-    return state.hasValue ? parseFloat(state.currentValue) : null;
+    return state.hasValue ? decNormalize(state.currentValue) : null;
   }
 
   function getRegisterValue(key) {
@@ -877,13 +1042,13 @@ function createCalculator() {
     if (!sampleDisplay || sampleDisplay.clientWidth === 0) return;
 
     const probe = getRegisterProbe();
-    const cssFontSize = parseFloat(getComputedStyle(dom.memoryFlags).fontSize);
+    const cssFontSize = decNormalize(getComputedStyle(dom.memoryFlags).fontSize);
 
     probe.style.fontSize = `${cssFontSize}px`;
     const widestDigit = findWidestDigit(probe);
     probe.textContent = '-' + widestDigit.repeat(MAX_DIGITS) + '.';
 
-    const availableWidth = sampleDisplay.clientWidth - parseFloat(getComputedStyle(probe).paddingLeft);
+    const availableWidth = sampleDisplay.clientWidth - decNormalize(getComputedStyle(probe).paddingLeft);
 
     let fontSize = cssFontSize;
     probe.style.fontSize = `${fontSize}px`;
