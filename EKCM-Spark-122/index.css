@@ -24,110 +24,6 @@
   font-style: normal;
 }
 /* =========================================================================
-   ТОКЕНЫ: цвета, шрифты, позиционирование
-   ========================================================================= */
-:root {
-  /* ---- Цвета ---- */
-  --color-page-bg: #ffffff;
-  --color-board-bg: #d8dbd3;
-  --color-board-border: #9aa3a8;
-
-  --color-screen-bg: #29002c;
-  --color-screen-border: #0d000f;
-  --color-screen-digit: #dd600d;
-
-  --color-label-bg: #b8bdb3;
-  --color-label-border: #000000;
-  --color-label-text: #000000;
-
-  --color-key-bg: #8a8b63;
-  --color-key-shadow: #444141;
-  --color-key-shadow-inset: rgba(136, 85, 85, 0.5);
-  --color-key-shadow-inset-active: rgba(129, 76, 76, 0.5);
-  --color-digit-key-bg: #e6e8d7;
-  --color-equals-bg: rgb(166, 47, 10);
-
-  --color-panel-border: #000000;
-  --color-panel-shadow: #9f9f9e;
-
-  --color-precision-btn: #000000;
-  --color-precision-btn-zero: #A8392F;
-
-  --color-switch-track: #6b7073;
-  --color-switch-border: #9aa3a8;
-  --color-switch-knob: #dbebed;
-
-  --color-register-text: #292121;
-  /* Ширина одного разряда регистра и их количество (знак + 16 цифр + точка) -
-     раньше ширина .register-display подбиралась в JS через scrollWidth,
-     что не пережило переход регистров на строки; теперь ширина задаётся
-     здесь и .register-display её просто использует через calc(). */
-  --register-digit-width: 14.55px;
-  --register-digit-count: 18;
-
-  --color-instruction-bg: #4a6a8f;
-  --color-instruction-bg-hover: #5f7fa0;
-  --color-instruction-shadow-inset: rgba(10, 30, 99, 0.5);
-
-  --font-digital: 'digital';
-  --font-gost: 'gost';
-
-  /* =======================================================================
-     ПОЗИЦИОНИРОВАНИЕ ПЛАТЫ КАЛЬКУЛЯТОРА
-     -----------------------------------------------------------------------
-     ======================================================================= */
-  --board-min-width: 320px;
-  --board-max-width: 825px;
-  --board-aspect: 825 / 700;
-  --board-border-width: 20px;
-
-  /* .top-svg — декоративная верхняя панель (в % от платы) */
-  --top-svg-left: 5%;
-  --top-svg-width: 90%;
-  --top-svg-height: 30%;
-  --top-svg-scale-x: 1.1215;
-  --top-svg-scale-y: 1.1;
-
-  /* .screen-section / .screen — блок экрана (в % от платы) */
-  --screen-top: 38%;
-  --screen-left: 13%;
-  --screen-width: 80%;
-  --screen-height: 10%;
-  --screen-scale: 1.25;
-
-  /* .calculator-title — табличка с названием модели (в % от платы) */
-  --title-top: 0.5%;
-  --title-left: 75%;
-  --title-width: 21%;
-  --title-max-width:155px;
-  --title-height: 6%;
-  --title-scale: 0.9;
-
-  /* .keyboard — область клавиатуры целиком (в % от платы) */
-  --keyboard-top: 50%;
-  --keyboard-right: -32%;
-  --keyboard-width: 75%;
-  --keyboard-height: 27%;
-  --keyboard-scale: 1.1;
-
-  /* .precision — переключатель точности (в % от .keyboard) */
-  --precision-top: -4.44%;
-  --precision-left: -31.91%;
-  --precision-scale: 0.93;
-  --precision-width: 80px;
-  --precision-height: 180px;
-
-  /* .switch-row — тумблер включения (в % от .keyboard) */
-  --switch-top: -20%;
-  --switch-left: -51.5%;
-  --switch-rotate: 270deg;
-  --switch-scale: 1.5;
-
-  /* .memory_flags — панель регистров и флагов */
-  --memory-flags-basis: 330px;
-  --memory-flags-min: 220px;
-}
-/* =========================================================================
    БАЗОВЫЕ СТИЛИ СТРАНИЦЫ
    ========================================================================= */
 html {
@@ -612,7 +508,7 @@ img {
   height: fit-content;
 }
 .register-display {
-  width: calc(var(--register-digit-count) * var(--register-digit-width));
+  width: calc(18 * 14.55px);
   max-width: 100%;
   height:fit-content;
   height: fit-content;
@@ -620,10 +516,9 @@ img {
 }
 .register-digit {
   margin: 0 0;
-  padding-left: var(--register-digit-width);
+  padding-left: 14.55px;
   height: 32px;
   height:100%;
-  font-size: var(--register-font-size);
   white-space: nowrap;   /* не даём 18 символам перенестись на вторую строку */
 }
 .flags {
